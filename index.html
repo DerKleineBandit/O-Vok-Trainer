@@ -1,0 +1,3822 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>O-Vok-Trainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Noto+Sans:wght@300;400;500;600&family=Noto+Sans+JP&family=Noto+Sans+KR&family=Noto+Sans+SC&family=Noto+Sans+Arabic&family=Noto+Sans+Devanagari&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d0f14;
+  --bg2: #13161e;
+  --bg3: #1a1e2a;
+  --bg4: #222637;
+  --surface: #1e2130;
+  --surface2: #252a3d;
+  --border: #2e3450;
+  --border2: #3a4060;
+  --accent: #4f8ef7;
+  --accent2: #7b6af0;
+  --accent3: #f06a6a;
+  --accent4: #4fd4b0;
+  --gold: #f0b44f;
+  --text: #e8eaf0;
+  --text2: #a0a8c0;
+  --text3: #6878a0;
+  --success: #4fd47a;
+  --error: #f06a6a;
+  --warn: #f0b44f;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-lg: 18px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  --shadow-lg: 0 8px 48px rgba(0,0,0,0.6);
+  --transition: 0.2s cubic-bezier(0.4,0,0.2,1);
+  --font-display: 'Syne', sans-serif;
+  --font-body: 'Noto Sans', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 16px; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg2); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+/* ==================== LAYOUT ==================== */
+#app { display: flex; flex-direction: column; min-height: 100vh; }
+
+/* ==================== TOP NAV ==================== */
+#topNav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+  height: 56px;
+  background: rgba(13,15,20,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 12px;
+  padding: 0 16px;
+}
+
+#logo {
+  font-family: var(--font-display);
+  font-size: 1.25rem; font-weight: 800;
+  color: var(--accent);
+  cursor: pointer;
+  white-space: nowrap;
+  letter-spacing: -0.02em;
+  transition: color var(--transition);
+  text-decoration: none;
+  display: flex; align-items: center; gap: 8px;
+}
+#logo:hover { color: var(--accent2); }
+#logo .logo-dot { 
+  width: 8px; height: 8px; border-radius: 50%; 
+  background: var(--accent4); display: inline-block;
+}
+
+#navSpacer { flex: 1; }
+
+.nav-btn {
+  height: 36px; padding: 0 14px;
+  background: var(--bg3); border: 1px solid var(--border);
+  color: var(--text2); border-radius: var(--radius-sm);
+  cursor: pointer; font-size: 0.82rem; font-weight: 500;
+  font-family: var(--font-body);
+  transition: all var(--transition);
+  display: flex; align-items: center; gap: 6px;
+  white-space: nowrap;
+}
+.nav-btn:hover { background: var(--bg4); color: var(--text); border-color: var(--border2); }
+.nav-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* Word/Sentence Toggle */
+#modeToggle {
+  display: flex; background: var(--bg3); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); overflow: hidden; height: 36px;
+}
+.mode-btn {
+  padding: 0 14px; cursor: pointer; font-size: 0.82rem;
+  font-family: var(--font-body); font-weight: 500;
+  color: var(--text3); background: transparent; border: none;
+  transition: all var(--transition); height: 100%;
+}
+.mode-btn.active { background: var(--accent2); color: #fff; }
+
+/* Language Dropdown */
+#langDropdown {
+  position: relative;
+}
+#langDropdownBtn {
+  height: 36px; padding: 0 14px;
+  background: var(--bg3); border: 1px solid var(--border);
+  color: var(--text2); border-radius: var(--radius-sm);
+  cursor: pointer; font-size: 0.82rem; font-weight: 500;
+  font-family: var(--font-body);
+  display: flex; align-items: center; gap: 6px;
+  min-width: 130px;
+  transition: all var(--transition);
+}
+#langDropdownBtn:hover { border-color: var(--accent); color: var(--text); }
+#langDropdownPanel {
+  position: absolute; top: calc(100% + 6px); left: 0;
+  min-width: 200px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow-lg);
+  z-index: 2000; overflow: hidden;
+  display: none;
+  max-height: 320px; overflow-y: auto;
+}
+#langDropdownPanel.open { display: block; }
+.lang-option {
+  padding: 10px 14px; cursor: pointer;
+  display: flex; align-items: center; gap: 10px;
+  font-size: 0.88rem; color: var(--text2);
+  transition: all var(--transition);
+}
+.lang-option:hover { background: var(--bg4); color: var(--text); }
+.lang-option.active { color: var(--accent); background: rgba(79,142,247,0.08); }
+
+/* ==================== MAIN CONTENT ==================== */
+#main {
+  margin-top: 56px;
+  flex: 1;
+  display: flex;
+  min-height: calc(100vh - 56px);
+}
+
+/* ==================== SIDEBAR ==================== */
+#sidebar {
+  width: 220px; min-width: 220px;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  padding: 16px 0;
+  overflow-y: auto;
+  position: fixed; top: 56px; bottom: 0; left: 0;
+  z-index: 100;
+  transition: transform var(--transition);
+}
+
+.sidebar-section-title {
+  font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text3);
+  padding: 8px 16px 4px;
+  margin-top: 8px;
+}
+
+.sidebar-item {
+  padding: 9px 16px; cursor: pointer;
+  display: flex; align-items: center; gap: 10px;
+  font-size: 0.88rem; color: var(--text2);
+  transition: all var(--transition);
+  border-left: 2px solid transparent;
+  border-radius: 0;
+}
+.sidebar-item:hover { background: var(--bg3); color: var(--text); }
+.sidebar-item.active { 
+  background: rgba(79,142,247,0.1); 
+  color: var(--accent); 
+  border-left-color: var(--accent); 
+}
+.sidebar-item .icon { font-size: 1rem; width: 20px; text-align: center; }
+
+/* Pages list */
+#pagesList { flex: 1; overflow-y: auto; }
+.page-item {
+  padding: 7px 16px 7px 32px; cursor: pointer;
+  display: flex; align-items: center; gap: 8px;
+  font-size: 0.83rem; color: var(--text3);
+  transition: all var(--transition);
+  border-left: 2px solid transparent;
+}
+.page-item:hover { background: var(--bg3); color: var(--text2); }
+.page-item.active { 
+  color: var(--accent); 
+  border-left-color: var(--accent);
+  background: rgba(79,142,247,0.08);
+}
+
+/* ==================== CONTENT AREA ==================== */
+#content {
+  margin-left: 220px;
+  flex: 1;
+  padding: 24px;
+  min-height: calc(100vh - 56px);
+}
+
+/* ==================== SCREENS ==================== */
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* ==================== HOME SCREEN ==================== */
+#homeScreen {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.home-hero {
+  text-align: center;
+  padding: 40px 0 32px;
+}
+.home-hero h1 {
+  font-family: var(--font-display);
+  font-size: 3rem; font-weight: 800;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 50%, var(--accent4) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  margin-bottom: 8px;
+}
+.home-hero p { color: var(--text2); font-size: 1rem; }
+
+.home-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+  margin-top: 32px;
+}
+
+.lang-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  cursor: pointer;
+  transition: all var(--transition);
+  position: relative; overflow: hidden;
+}
+.lang-card::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(79,142,247,0.05) 0%, rgba(123,106,240,0.05) 100%);
+  opacity: 0; transition: opacity var(--transition);
+}
+.lang-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow); }
+.lang-card:hover::before { opacity: 1; }
+
+.lang-card-flag { font-size: 2rem; margin-bottom: 10px; }
+.lang-card-name { 
+  font-family: var(--font-display); font-size: 1.1rem; font-weight: 700;
+  color: var(--text); margin-bottom: 4px;
+}
+.lang-card-code { font-size: 0.78rem; color: var(--text3); }
+.lang-card-actions {
+  display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap;
+}
+
+/* Subject cards on home */
+.subject-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.subject-card:hover { border-color: var(--accent4); transform: translateY(-2px); }
+.subject-card-icon { font-size: 2rem; margin-bottom: 10px; }
+.subject-card-name { font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; }
+
+/* Add card */
+.add-card {
+  background: transparent;
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  cursor: pointer;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  min-height: 140px;
+  color: var(--text3);
+  transition: all var(--transition);
+  font-size: 0.88rem;
+}
+.add-card:hover { border-color: var(--accent); color: var(--accent); }
+.add-card .add-icon { font-size: 1.8rem; margin-bottom: 8px; }
+
+/* ==================== CATALOG SCREEN ==================== */
+#catalogScreen { max-width: 1400px; margin: 0 auto; }
+
+.catalog-header {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 20px; flex-wrap: wrap;
+}
+.catalog-title {
+  font-family: var(--font-display); font-size: 1.5rem; font-weight: 700;
+  flex: 1;
+}
+
+/* Page Audio Player */
+.page-audio-bar {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 16px;
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 16px;
+}
+.page-audio-bar .audio-label { font-size: 0.82rem; color: var(--text3); }
+.audio-btn {
+  height: 32px; padding: 0 12px;
+  background: var(--accent); color: #fff;
+  border: none; border-radius: var(--radius-sm);
+  cursor: pointer; font-size: 0.82rem; font-weight: 500;
+  display: flex; align-items: center; gap: 6px;
+  transition: all var(--transition);
+}
+.audio-btn:hover { background: var(--accent2); }
+.audio-btn.secondary { background: var(--bg4); color: var(--text2); border: 1px solid var(--border); }
+.audio-btn.secondary:hover { background: var(--border); color: var(--text); }
+
+/* Search bar */
+.search-bar {
+  display: flex; gap: 8px; margin-bottom: 16px;
+}
+.search-input {
+  flex: 1; height: 40px; padding: 0 14px;
+  background: var(--bg3); border: 1px solid var(--border);
+  color: var(--text); border-radius: var(--radius-sm);
+  font-family: var(--font-body); font-size: 0.9rem;
+  outline: none; transition: border-color var(--transition);
+}
+.search-input:focus { border-color: var(--accent); }
+.search-input::placeholder { color: var(--text3); }
+
+/* Vocab Table */
+.vocab-table-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.vocab-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.vocab-table th {
+  background: var(--bg3);
+  padding: 12px 14px;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text3);
+  border-bottom: 1px solid var(--border);
+}
+
+.vocab-table th:nth-child(1) { width: 30%; }
+.vocab-table th:nth-child(2) { width: 25%; }
+.vocab-table th:nth-child(3) { width: 30%; }
+.vocab-table th:nth-child(4) { width: 15%; }
+
+.vocab-row {
+  border-bottom: 1px solid var(--border);
+  transition: background var(--transition);
+}
+.vocab-row:last-child { border-bottom: none; }
+.vocab-row:hover { background: rgba(79,142,247,0.04); }
+
+.vocab-row td {
+  padding: 12px 14px;
+  font-size: 0.9rem;
+  vertical-align: middle;
+}
+
+.vocab-target {
+  font-size: 1rem;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.vocab-translation {
+  color: var(--accent);
+  font-size: 0.88rem;
+}
+
+.vocab-desc {
+  color: var(--text2);
+  font-size: 0.85rem;
+}
+
+.vocab-actions {
+  display: flex; gap: 6px; align-items: center;
+}
+
+/* ==================== BUTTONS ==================== */
+.btn {
+  height: 36px; padding: 0 14px;
+  border: none; border-radius: var(--radius-sm);
+  cursor: pointer; font-size: 0.85rem; font-weight: 500;
+  font-family: var(--font-body);
+  display: inline-flex; align-items: center; gap: 6px;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: #3a7ae0; }
+.btn-secondary { background: var(--bg4); color: var(--text2); border: 1px solid var(--border); }
+.btn-secondary:hover { background: var(--border); color: var(--text); }
+.btn-danger { background: transparent; color: var(--error); border: 1px solid var(--error); }
+.btn-danger:hover { background: rgba(240,106,106,0.1); }
+.btn-success { background: var(--success); color: #000; }
+.btn-success:hover { opacity: 0.85; }
+.btn-sm { height: 28px; padding: 0 10px; font-size: 0.78rem; }
+.btn-icon { 
+  width: 28px; height: 28px; padding: 0; 
+  display: flex; align-items: center; justify-content: center;
+  background: transparent; border: 1px solid var(--border);
+  color: var(--text3); border-radius: 6px;
+  cursor: pointer; font-size: 0.85rem; transition: all var(--transition);
+}
+.btn-icon:hover { background: var(--bg4); color: var(--text); }
+.btn-icon.danger:hover { border-color: var(--error); color: var(--error); background: rgba(240,106,106,0.1); }
+
+/* ==================== MODALS ==================== */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 5000;
+  background: rgba(0,0,0,0.7);
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+  opacity: 0; pointer-events: none;
+  transition: opacity var(--transition);
+  backdrop-filter: blur(4px);
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+
+.modal {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  width: 100%; max-width: 520px;
+  max-height: 90vh; overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+  transform: translateY(16px);
+  transition: transform var(--transition);
+}
+.modal-overlay.open .modal { transform: translateY(0); }
+
+.modal-lg { max-width: 720px; }
+.modal-xl { max-width: 900px; }
+
+.modal-header {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 20px;
+}
+.modal-title {
+  font-family: var(--font-display); font-size: 1.15rem; font-weight: 700;
+  flex: 1;
+}
+.modal-close {
+  width: 32px; height: 32px;
+  background: var(--bg3); border: 1px solid var(--border);
+  color: var(--text2); border-radius: 50%;
+  cursor: pointer; font-size: 1rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: all var(--transition);
+}
+.modal-close:hover { background: var(--error); color: #fff; border-color: var(--error); }
+
+/* ==================== FORMS ==================== */
+.form-group { margin-bottom: 14px; }
+.form-label {
+  display: block; margin-bottom: 5px;
+  font-size: 0.8rem; font-weight: 600;
+  color: var(--text2); letter-spacing: 0.04em;
+}
+.form-input, .form-textarea, .form-select {
+  width: 100%; padding: 9px 12px;
+  background: var(--bg3); border: 1px solid var(--border);
+  color: var(--text); border-radius: var(--radius-sm);
+  font-family: var(--font-body); font-size: 0.9rem;
+  outline: none; transition: border-color var(--transition);
+}
+.form-input:focus, .form-textarea:focus, .form-select:focus { border-color: var(--accent); }
+.form-textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+.form-select { cursor: pointer; }
+.form-select option { background: var(--bg2); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-hint { font-size: 0.75rem; color: var(--text3); margin-top: 4px; }
+
+/* File Upload */
+.file-upload-area {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.file-upload-area:hover { border-color: var(--accent); background: rgba(79,142,247,0.04); }
+.file-upload-area input { display: none; }
+
+/* ==================== QUIZ SCREEN ==================== */
+#quizScreen {
+  max-width: 800px;
+  margin: 0 auto;
+  padding-bottom: 40px;
+}
+
+.quiz-header {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 20px;
+}
+
+.quiz-progress {
+  background: var(--bg3);
+  border-radius: 100px;
+  height: 6px;
+  flex: 1;
+  overflow: hidden;
+}
+.quiz-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  border-radius: 100px;
+  transition: width 0.5s ease;
+}
+
+.quiz-stats {
+  display: flex; gap: 16px; font-size: 0.82rem;
+}
+.quiz-stat { color: var(--text3); }
+.quiz-stat span { color: var(--text); font-weight: 600; }
+
+/* Stopwatch */
+.stopwatch {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px 12px;
+  font-family: monospace; font-size: 0.9rem;
+  color: var(--accent4);
+  display: flex; align-items: center; gap: 6px;
+}
+.stopwatch .sw-label { font-size: 0.7rem; color: var(--text3); font-family: var(--font-body); }
+
+/* Quiz Card */
+.quiz-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+.quiz-question-label {
+  font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text3); margin-bottom: 16px;
+}
+.quiz-question-word {
+  font-size: 2.2rem; font-weight: 700;
+  color: var(--text); margin-bottom: 12px;
+  line-height: 1.3;
+}
+.quiz-question-desc {
+  font-size: 0.9rem; color: var(--text2);
+}
+
+.quiz-audio-btn {
+  margin: 16px auto 0;
+  width: 48px; height: 48px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 50%; cursor: pointer; font-size: 1.3rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: all var(--transition);
+  color: var(--text2);
+}
+.quiz-audio-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Quiz Input */
+.quiz-input-area {
+  position: relative;
+}
+.quiz-input {
+  width: 100%; padding: 14px 16px;
+  background: var(--bg3); border: 2px solid var(--border);
+  color: var(--text); border-radius: var(--radius);
+  font-family: var(--font-body); font-size: 1.1rem;
+  outline: none; transition: border-color var(--transition);
+  text-align: center;
+}
+.quiz-input:focus { border-color: var(--accent); }
+.quiz-input.correct { border-color: var(--success); background: rgba(79,212,122,0.06); }
+.quiz-input.wrong { border-color: var(--error); background: rgba(240,106,106,0.06); }
+
+.quiz-actions {
+  display: flex; gap: 10px; flex-wrap: wrap;
+  justify-content: center; margin-top: 16px;
+}
+
+.quiz-feedback {
+  padding: 14px 20px;
+  border-radius: var(--radius);
+  margin-top: 16px;
+  font-size: 0.95rem;
+  display: none;
+}
+.quiz-feedback.correct-fb { 
+  background: rgba(79,212,122,0.1); 
+  border: 1px solid var(--success);
+  color: var(--success);
+}
+.quiz-feedback.wrong-fb { 
+  background: rgba(240,106,106,0.1); 
+  border: 1px solid var(--error);
+  color: var(--error);
+}
+.quiz-feedback.show-answer-fb {
+  background: rgba(240,180,79,0.1);
+  border: 1px solid var(--gold);
+  color: var(--gold);
+}
+
+/* Quiz Results */
+.quiz-results {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+}
+.results-score {
+  text-align: center; margin-bottom: 24px;
+}
+.results-score-big {
+  font-family: var(--font-display); font-size: 3rem; font-weight: 800;
+  color: var(--accent);
+}
+.results-score-max { color: var(--text3); font-size: 0.9rem; margin-top: 4px; }
+
+.results-table {
+  width: 100%; border-collapse: collapse;
+}
+.results-table th, .results-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.85rem;
+  text-align: left;
+}
+.results-table th { 
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--text3);
+  background: var(--bg3);
+}
+.results-table .time-cell { font-family: monospace; color: var(--accent4); }
+.results-table .correct-cell { color: var(--success); }
+.results-table .wrong-cell { color: var(--error); }
+.results-table .partial-cell { color: var(--gold); }
+
+/* ==================== LANG DETAIL SCREEN ==================== */
+#langDetailScreen { max-width: 900px; margin: 0 auto; }
+
+.lang-detail-header {
+  display: flex; align-items: center; gap: 16px;
+  margin-bottom: 24px;
+}
+.lang-detail-flag { font-size: 2.5rem; }
+.lang-detail-name { font-family: var(--font-display); font-size: 1.8rem; font-weight: 800; }
+
+.lang-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
+}
+
+.feature-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  cursor: pointer;
+  transition: all var(--transition);
+  text-align: center;
+}
+.feature-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.feature-card .icon { font-size: 2rem; margin-bottom: 10px; }
+.feature-card .title { font-weight: 600; font-size: 0.95rem; }
+.feature-card .desc { font-size: 0.78rem; color: var(--text3); margin-top: 4px; }
+
+/* ==================== GRAMMAR / DECLENSION SCREENS ==================== */
+#grammarScreen, #declensionScreen, #pronunciationScreen, #charactersScreen, #subjectScreen {
+  max-width: 900px; margin: 0 auto;
+}
+
+.grammar-entry {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.grammar-entry-title {
+  font-weight: 600; font-size: 0.95rem; margin-bottom: 6px;
+  color: var(--accent);
+}
+.grammar-entry-content {
+  font-size: 0.88rem; color: var(--text2);
+  white-space: pre-wrap; line-height: 1.7;
+}
+.grammar-entry-actions {
+  display: flex; gap: 6px; margin-top: 10px;
+}
+
+/* Declension table */
+.declension-table-display {
+  width: 100%; border-collapse: collapse; margin-top: 8px;
+}
+.declension-table-display th, .declension-table-display td {
+  padding: 8px 12px; border: 1px solid var(--border);
+  font-size: 0.85rem;
+}
+.declension-table-display th { background: var(--bg3); color: var(--text2); }
+
+/* Characters canvas */
+.char-canvas-wrap {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  text-align: center;
+}
+.char-canvas {
+  background: #fff;
+  border-radius: 8px;
+  cursor: crosshair;
+  touch-action: none;
+}
+.char-display {
+  font-size: 4rem; text-align: center;
+  color: var(--text);
+  margin: 12px 0;
+}
+
+/* ==================== NOTIFICATIONS ==================== */
+#notifications {
+  position: fixed; bottom: 20px; right: 20px; z-index: 9999;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.notif {
+  padding: 12px 16px;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); box-shadow: var(--shadow);
+  font-size: 0.85rem; max-width: 300px;
+  animation: slideIn 0.3s ease;
+}
+.notif.success { border-color: var(--success); color: var(--success); }
+.notif.error { border-color: var(--error); color: var(--error); }
+.notif.info { border-color: var(--accent); color: var(--accent); }
+@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes fadeOut { to { opacity: 0; transform: translateX(100%); } }
+
+/* ==================== LOCK INDICATOR ==================== */
+.lock-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: 100px;
+  font-size: 0.72rem; font-weight: 600;
+  background: rgba(240,180,79,0.1);
+  border: 1px solid var(--gold);
+  color: var(--gold);
+}
+
+/* ==================== PASSWORD MODAL ==================== */
+#passwordModal .password-hint {
+  font-size: 0.78rem; color: var(--text3); margin-top: 8px; text-align: center;
+}
+
+/* ==================== QUIZ SETUP MODAL ==================== */
+.quiz-option-grid {
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;
+}
+.quiz-option-btn {
+  padding: 12px; text-align: center;
+  background: var(--bg3); border: 2px solid var(--border);
+  border-radius: var(--radius-sm); cursor: pointer;
+  font-size: 0.85rem; font-weight: 500; color: var(--text2);
+  transition: all var(--transition);
+}
+.quiz-option-btn:hover { border-color: var(--accent); color: var(--text); }
+.quiz-option-btn.selected { 
+  border-color: var(--accent); 
+  background: rgba(79,142,247,0.1); 
+  color: var(--accent);
+}
+
+/* ==================== LOADING ==================== */
+.loading-spinner {
+  display: inline-block; width: 20px; height: 20px;
+  border: 2px solid var(--border); border-top-color: var(--accent);
+  border-radius: 50%; animation: spin 0.6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.empty-state {
+  text-align: center; padding: 48px 0;
+  color: var(--text3); font-size: 0.9rem;
+}
+.empty-state .icon { font-size: 3rem; margin-bottom: 12px; opacity: 0.4; }
+
+
+/* ==================== GEO CANVAS ==================== */
+#geoCanvas { background: #1a1e2a; }
+.geo-tool-btn { }
+.geo-tool-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* Subject card display */
+.sc-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px; margin-bottom: 12px;
+}
+.sc-card-type-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: 100px; font-size: 0.72rem; font-weight: 600;
+  background: rgba(79,142,247,0.1); border: 1px solid var(--accent); color: var(--accent);
+  margin-bottom: 8px;
+}
+.sc-card-question { font-size: 1rem; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+.sc-card-answer { font-size: 0.88rem; color: var(--text2); }
+.sc-card-image { max-width: 100%; max-height: 240px; border-radius: 8px; margin: 8px 0; border: 1px solid var(--border); }
+.sc-mc-option {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px; border-radius: 8px;
+  background: var(--bg3); border: 1px solid var(--border);
+  margin-bottom: 6px; font-size: 0.88rem;
+}
+.sc-mc-option.correct { border-color: var(--success); background: rgba(79,212,122,0.08); color: var(--success); }
+.sc-mc-option.wrong { border-color: var(--error); background: rgba(240,106,106,0.08); color: var(--error); }
+.sc-mc-option.selected { border-color: var(--accent); background: rgba(79,142,247,0.08); }
+.sc-option-edit {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px; border-radius: 8px; background: var(--bg3);
+  border: 1px solid var(--border); margin-bottom: 6px;
+}
+.sc-option-edit input[type=text] { flex:1; }
+.sc-option-edit input[type=checkbox] { width:16px; height:16px; cursor:pointer; accent-color: var(--success); }
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+  #sidebar { transform: translateX(-100%); }
+  #sidebar.mobile-open { transform: translateX(0); }
+  #content { margin-left: 0; padding: 16px; }
+  .home-hero h1 { font-size: 2rem; }
+  .quiz-question-word { font-size: 1.6rem; }
+}
+
+/* Grammar text check area */
+.grammar-check-area {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px; margin-top: 12px;
+}
+.grammar-result {
+  margin-top: 12px; padding: 14px;
+  background: rgba(79,142,247,0.06);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem; color: var(--text2);
+  white-space: pre-wrap; line-height: 1.7;
+  display: none;
+}
+
+/* Tabs */
+.tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+.tab {
+  padding: 10px 18px; cursor: pointer;
+  font-size: 0.88rem; font-weight: 500; color: var(--text3);
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+  transition: all var(--transition);
+}
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* Section header */
+.section-header {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 16px;
+}
+.section-title { font-family: var(--font-display); font-size: 1.2rem; font-weight: 700; flex: 1; }
+
+/* Page tabs in sidebar */
+.page-tabs-header {
+  padding: 8px 10px 4px;
+  font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--text3);
+}
+.add-page-btn {
+  margin: 6px 10px;
+  width: calc(100% - 20px);
+  height: 30px; padding: 0 10px;
+  background: transparent; border: 1px dashed var(--border);
+  color: var(--text3); border-radius: var(--radius-sm);
+  cursor: pointer; font-size: 0.78rem;
+  transition: all var(--transition);
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.add-page-btn:hover { border-color: var(--accent); color: var(--accent); }
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- TOP NAV -->
+<nav id="topNav">
+  <a id="logo" href="#" onclick="showScreen('home')">
+    <span class="logo-dot"></span>O-Vok-Trainer
+  </a>
+  <div id="langDropdown">
+    <div id="langDropdownBtn" onclick="toggleLangDropdown()">
+      <span id="langDropdownFlag">🌐</span>
+      <span id="langDropdownName">Sprache</span>
+      <span style="margin-left:auto">▾</span>
+    </div>
+    <div id="langDropdownPanel"></div>
+  </div>
+  <div id="navSpacer"></div>
+  <div id="modeToggle">
+    <button class="mode-btn active" id="btnWords" onclick="setVocabMode('word')">Wörter</button>
+    <button class="mode-btn" id="btnSentences" onclick="setVocabMode('sentence')">Sätze</button>
+  </div>
+  <button class="nav-btn" id="editModeBtn" onclick="toggleEditMode()">✏️ Bearbeiten</button>
+  <button class="nav-btn" onclick="openModal('exportModal')">📦 Sichern</button>
+  <button class="nav-btn active" id="quizBtn" onclick="openQuizSetup()">🎯 Abfragen</button>
+</nav>
+
+<!-- SIDEBAR -->
+<div id="main">
+<aside id="sidebar">
+  <div class="sidebar-item active" onclick="showScreen('home')" id="sideHome">
+    <span class="icon">🏠</span> Startseite
+  </div>
+  <div class="sidebar-item" onclick="showScreen('catalog')" id="sideCatalog">
+    <span class="icon">📚</span> Katalog
+  </div>
+  <div id="pagesNav" style="display:none">
+    <div class="page-tabs-header">Seiten</div>
+    <div id="pagesList"></div>
+    <button class="add-page-btn" id="addPageBtn" onclick="openAddPage()" style="display:none">+ Seite hinzufügen</button>
+  </div>
+  <div id="subjectsNav">
+    <div class="sidebar-section-title">Fächer</div>
+    <div id="subjectsList"></div>
+    <button class="add-page-btn" id="addSubjectNavBtn" onclick="openAddSubject()" style="display:none">+ Fach hinzufügen</button>
+  </div>
+</aside>
+
+<!-- CONTENT -->
+<main id="content">
+
+<!-- HOME SCREEN -->
+<div class="screen active" id="homeScreen">
+  <div class="home-hero">
+    <h1>O-Vok-Trainer</h1>
+    <p>Lerne Vokabeln in jeder Sprache — und übe für alle Fächer</p>
+  </div>
+  <div class="section-header" style="margin-top:32px">
+    <span class="section-title">🌍 Sprachen</span>
+    <div id="homeEditBtns" style="display:none">
+      <button class="btn btn-primary btn-sm" onclick="openAddLanguage()">+ Sprache hinzufügen</button>
+    </div>
+  </div>
+  <div id="langGrid" class="home-grid">
+    <div class="empty-state"><div class="icon">🌐</div>Noch keine Sprachen. Im Bearbeitungsmodus hinzufügen.</div>
+  </div>
+  <div class="section-header" style="margin-top:32px">
+    <span class="section-title">📓 Andere Fächer</span>
+    <div id="subjectEditBtns" style="display:none">
+      <button class="btn btn-primary btn-sm" onclick="openAddSubject()">+ Fach hinzufügen</button>
+    </div>
+  </div>
+  <div id="subjectGrid" class="home-grid">
+    <div class="empty-state"><div class="icon">📓</div>Noch keine Fächer.</div>
+  </div>
+</div>
+
+<!-- CATALOG SCREEN -->
+<div class="screen" id="catalogScreen">
+  <div class="catalog-header">
+    <h2 class="catalog-title" id="catalogTitle">Katalog</h2>
+    <div id="catalogEditBtns" style="display:none;gap:8px;display:flex">
+      <button class="btn btn-primary btn-sm" onclick="openAddVocab()">+ Vokabel</button>
+    </div>
+  </div>
+  <div class="page-audio-bar" id="pageAudioBar">
+    <span class="audio-label">🎵 Seiten-Audio:</span>
+    <button class="audio-btn" id="pageAudioPlayBtn" onclick="playPageAudio()">▶ Abspielen</button>
+    <div id="pageAudioUploadWrap" style="display:none">
+      <label class="audio-btn secondary" style="cursor:pointer">
+        📁 MP3 hochladen
+        <input type="file" accept=".mp3,.wav,.ogg,.m4a" style="display:none" onchange="uploadPageAudio(this)">
+      </label>
+    </div>
+    <audio id="pageAudioPlayer" style="display:none"></audio>
+  </div>
+  <div class="search-bar">
+    <input class="search-input" id="searchInput" placeholder="🔍 Suche in Zielsprache oder Deutsch/Englisch..." oninput="handleSearch(this.value)">
+  </div>
+  <div class="vocab-table-wrap">
+    <table class="vocab-table">
+      <thead>
+        <tr>
+          <th id="colLang">Zielsprache</th>
+          <th id="colTrans">
+            <span>Übersetzung</span>
+            <select id="transLangToggle" style="margin-left:8px;background:var(--bg4);border:1px solid var(--border);color:var(--text2);border-radius:4px;font-size:0.75rem;padding:2px 6px" onchange="renderVocabs()">
+              <option value="de">Deutsch</option>
+              <option value="en">Englisch</option>
+            </select>
+          </th>
+          <th>Beschreibung</th>
+          <th>Aktionen</th>
+        </tr>
+      </thead>
+      <tbody id="vocabTableBody">
+        <tr><td colspan="4"><div class="empty-state"><div class="icon">📖</div>Noch keine Vokabeln.</div></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- LANG DETAIL SCREEN -->
+<div class="screen" id="langDetailScreen">
+  <div class="lang-detail-header">
+    <span class="lang-detail-flag" id="langDetailFlag">🌐</span>
+    <div>
+      <div class="lang-detail-name" id="langDetailName">Sprache</div>
+      <div id="langLockStatus"></div>
+    </div>
+    <div id="langDetailEditBtns" style="display:none;gap:8px">
+      <button class="btn btn-secondary btn-sm" onclick="openEditLanguage()">✏️ Sprache bearbeiten</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteCurrentLanguage()">🗑️ Löschen</button>
+    </div>
+  </div>
+  <div class="lang-feature-grid">
+    <div class="feature-card" onclick="openFeature('catalog')">
+      <div class="icon">📚</div>
+      <div class="title">Wort-Vokabeln</div>
+      <div class="desc">Einzelne Wörter lernen</div>
+    </div>
+    <div class="feature-card" onclick="openFeature('sentences')">
+      <div class="icon">💬</div>
+      <div class="title">Satz-Vokabeln</div>
+      <div class="desc">Ganze Sätze lernen</div>
+    </div>
+    <div class="feature-card" onclick="openFeature('grammar')">
+      <div class="icon">📝</div>
+      <div class="title">Grammatik-Helfer</div>
+      <div class="desc">Regeln & Textkorrekturen</div>
+    </div>
+    <div class="feature-card" onclick="openFeature('declension')">
+      <div class="icon">📋</div>
+      <div class="title">Deklination</div>
+      <div class="desc">Wörter beugen</div>
+    </div>
+    <div class="feature-card" onclick="openFeature('pronunciation')">
+      <div class="icon">🔊</div>
+      <div class="title">Aussprache & Info</div>
+      <div class="desc">Sprachinfo & Aussprache</div>
+    </div>
+  </div>
+</div>
+
+<!-- GRAMMAR SCREEN -->
+<div class="screen" id="grammarScreen">
+  <div class="section-header">
+    <button class="btn btn-secondary btn-sm" onclick="backToLangDetail()">← Zurück</button>
+    <span class="section-title">📝 Grammatik-Helfer</span>
+    <div id="grammarEditBtns" style="display:none">
+      <button class="btn btn-primary btn-sm" onclick="openAddGrammar()">+ Regel hinzufügen</button>
+    </div>
+  </div>
+  <div class="grammar-check-area">
+    <label class="form-label">Text prüfen (Grammatik-Check)</label>
+    <textarea class="form-textarea" id="grammarCheckInput" placeholder="Schreibe einen Text in der Zielsprache und lass ihn prüfen..."></textarea>
+    <button class="btn btn-primary" style="margin-top:8px" onclick="checkGrammar()">Text prüfen</button>
+    <div class="grammar-result" id="grammarResult"></div>
+  </div>
+  <div style="margin-top:20px">
+    <div class="section-header">
+      <span class="section-title" style="font-size:1rem">Grammatik-Regeln</span>
+    </div>
+    <div id="grammarList"></div>
+  </div>
+</div>
+
+<!-- DECLENSION SCREEN -->
+<div class="screen" id="declensionScreen">
+  <div class="section-header">
+    <button class="btn btn-secondary btn-sm" onclick="backToLangDetail()">← Zurück</button>
+    <span class="section-title">📋 Deklination</span>
+    <div id="declensionEditBtns" style="display:none">
+      <button class="btn btn-primary btn-sm" onclick="openAddDeclension()">+ Wort hinzufügen</button>
+    </div>
+  </div>
+  <div id="declensionList"></div>
+</div>
+
+<!-- PRONUNCIATION SCREEN -->
+<div class="screen" id="pronunciationScreen">
+  <div class="section-header">
+    <button class="btn btn-secondary btn-sm" onclick="backToLangDetail()">← Zurück</button>
+    <span class="section-title">🔊 Aussprache & Sprachinfo</span>
+    <div id="pronunciationEditBtns" style="display:none">
+      <button class="btn btn-primary btn-sm" onclick="openEditPronunciation()">✏️ Bearbeiten</button>
+    </div>
+  </div>
+  <div id="pronunciationContent"></div>
+</div>
+
+<!-- CHARACTERS SCREEN -->
+<div class="screen" id="charactersScreen">
+  <div class="section-header">
+    <button class="btn btn-secondary btn-sm" onclick="showScreen('catalog')">← Zurück</button>
+    <span class="section-title">✍️ Schriftzeichen</span>
+    <div id="charEditBtns" style="display:none">
+      <button class="btn btn-primary btn-sm" onclick="openAddCharacter()">+ Zeichen</button>
+    </div>
+  </div>
+  <div id="charactersList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px"></div>
+</div>
+
+<!-- SUBJECT SCREEN -->
+<div class="screen" id="subjectScreen">
+  <div class="section-header">
+    <button class="btn btn-secondary btn-sm" onclick="showScreen('home')">← Zurück</button>
+    <span class="section-title" id="subjectScreenTitle">Fach</span>
+    <div style="display:flex;gap:8px;align-items:center">
+      <div id="subjectCardEditBtns" style="display:none;gap:8px">
+        <button class="btn btn-primary btn-sm" onclick="openAddSubjectCard()">+ Karte hinzufügen</button>
+        <button class="btn btn-secondary btn-sm" onclick="openGeoDrawing()">📐 Koordinatensystem</button>
+      </div>
+      <button class="btn btn-success btn-sm" onclick="startSubjectQuiz()">🎯 Abfragen starten</button>
+    </div>
+  </div>
+  <div id="subjectCardsList"></div>
+</div>
+
+<!-- GEO DRAWING SCREEN -->
+<div class="screen" id="geoScreen">
+  <div class="section-header">
+    <button class="btn btn-secondary btn-sm" onclick="showScreen('subject')">← Zurück</button>
+    <span class="section-title">📐 Koordinatensystem</span>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;color:var(--text2);cursor:pointer">
+        <input type="checkbox" id="geoGridSnap" checked onchange="geoToggleSnap(this.checked)"> Raster-Snap
+      </label>
+      <button class="btn btn-secondary btn-sm" id="geoPenBtn" onclick="geoSetTool('pen')">✏️ Stift</button>
+      <button class="btn btn-secondary btn-sm active" id="geoLineBtn" onclick="geoSetTool('line')">📏 Linie</button>
+      <button class="btn btn-secondary btn-sm" id="geoPointBtn" onclick="geoSetTool('point')">• Punkt</button>
+      <input type="color" id="geoColor" value="#4f8ef7" style="width:36px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px">
+      <button class="btn btn-danger btn-sm" onclick="geoClear()">🗑️ Alles löschen</button>
+      <button class="btn btn-primary btn-sm" onclick="geoSaveImage()">💾 Als PNG speichern</button>
+      <button class="btn btn-secondary btn-sm" onclick="geoSaveImageJPG()">💾 Als JPG speichern</button>
+    </div>
+  </div>
+  <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px;flex-wrap:wrap">
+    <span style="font-size:0.78rem;color:var(--text3)">Winkel:</span>
+    <span id="geoAngleDisplay" style="font-size:0.88rem;color:var(--accent4);font-weight:600;min-width:60px">—</span>
+    <span style="font-size:0.78rem;color:var(--text3);margin-left:12px">Cursor:</span>
+    <span id="geoCursorPos" style="font-size:0.82rem;color:var(--text2);font-family:monospace">(0, 0)</span>
+  </div>
+  <div style="overflow:auto;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg3)">
+    <canvas id="geoCanvas" style="cursor:crosshair;display:block"></canvas>
+  </div>
+</div>
+
+<!-- QUIZ SCREEN -->
+<div class="screen" id="quizScreen">
+  <div class="quiz-header">
+    <div class="stopwatch" id="stopwatch">
+      <span class="sw-label">Zeit</span>
+      <span id="stopwatchDisplay">00:00</span>
+    </div>
+    <div class="quiz-progress">
+      <div class="quiz-progress-fill" id="quizProgressFill" style="width:0%"></div>
+    </div>
+    <div class="quiz-stats">
+      <div class="quiz-stat">Frage <span id="quizCurrent">1</span>/<span id="quizTotal">0</span></div>
+      <div class="quiz-stat">✅ <span id="quizPoints">0</span></div>
+    </div>
+  </div>
+  <div class="quiz-card" id="quizCard">
+    <div class="quiz-question-label" id="quizDirectionLabel">Übersetze ins Deutsche</div>
+    <div class="quiz-question-word" id="quizWord">—</div>
+    <div class="quiz-question-desc" id="quizDesc"></div>
+    <button class="quiz-audio-btn" id="quizAudioBtn" onclick="playQuizAudio()" style="display:none">🔊</button>
+  </div>
+  <div class="quiz-input-area">
+    <input class="quiz-input" id="quizInput" placeholder="Deine Antwort..." onkeydown="if(event.key==='Enter')submitQuizAnswer()">
+    <div class="quiz-feedback" id="quizFeedback"></div>
+  </div>
+  <div class="quiz-actions" id="quizActions">
+    <button class="btn btn-primary" id="quizSubmitBtn" onclick="submitQuizAnswer()">Prüfen</button>
+    <button class="btn btn-secondary" onclick="dontKnow()">Ich weiß nicht</button>
+    <button class="btn btn-secondary" id="quizNextBtn" onclick="nextQuizQuestion()" style="display:none">Weiter →</button>
+  </div>
+  <div id="quizResults" style="display:none" class="quiz-results">
+    <div class="results-score">
+      <div class="results-score-big"><span id="resPoints">0</span> / <span id="resMax">0</span></div>
+      <div class="results-score-max">Punkte</div>
+      <div style="margin-top:8px;color:var(--text2);font-size:0.88rem" id="resGesamtzeit"></div>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="results-table">
+        <thead><tr><th>Vokabel</th><th>Deine Antwort</th><th>Richtig</th><th>Ergebnis</th><th class="time-cell">Zeit</th></tr></thead>
+        <tbody id="resultsTableBody"></tbody>
+      </table>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px;justify-content:center">
+      <button class="btn btn-primary" onclick="openQuizSetup()">🔄 Nochmal</button>
+      <button class="btn btn-secondary" onclick="showScreen('catalog')">← Zurück</button>
+    </div>
+  </div>
+</div>
+
+</main>
+</div>
+</div>
+
+<!-- NOTIFICATIONS -->
+<div id="notifications"></div>
+
+<!-- ============================================================ -->
+<!--                         MODALS                              -->
+<!-- ============================================================ -->
+
+<!-- Password Modal -->
+<div class="modal-overlay" id="passwordModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">🔒 Bearbeitungsmodus</div>
+      <button class="modal-close" onclick="closeModal('passwordModal')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Passwort eingeben</label>
+      <input class="form-input" id="passwordInput" type="password" placeholder="****" onkeydown="if(event.key==='Enter')submitPassword()">
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-secondary" onclick="closeModal('passwordModal')">Abbrechen</button>
+      <button class="btn btn-primary" onclick="submitPassword()">Entsperren</button>
+    </div>
+  </div>
+</div>
+
+<!-- Admin Menu Modal (Momo password) -->
+<div class="modal-overlay" id="adminModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">⚙️ Admin-Einstellungen</div>
+      <button class="modal-close" onclick="closeModal('adminModal')">✕</button>
+    </div>
+    <div class="tabs">
+      <div class="tab active" onclick="switchAdminTab('password',this)">Passwort ändern</div>
+      <div class="tab" onclick="switchAdminTab('theme',this)">Hintergrundfarbe</div>
+    </div>
+    <div id="adminTabPassword">
+      <div class="form-group">
+        <label class="form-label">Neues Bearbeitungs-Passwort</label>
+        <input class="form-input" id="newPassword" type="password" placeholder="Neues Passwort">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Passwort bestätigen</label>
+        <input class="form-input" id="newPasswordConfirm" type="password" placeholder="Wiederholen">
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+        <button class="btn btn-secondary" onclick="closeModal('adminModal')">Abbrechen</button>
+        <button class="btn btn-primary" onclick="saveNewPassword()">Passwort speichern</button>
+      </div>
+    </div>
+    <div id="adminTabTheme" style="display:none">
+      <div class="form-group">
+        <label class="form-label">Hintergrundfarbe wählen</label>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px" id="themePresets"></div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:8px">
+          <label class="form-label" style="margin:0">Eigene Farbe:</label>
+          <input type="color" id="customBgColor" style="width:48px;height:36px;border:none;background:none;cursor:pointer" onchange="applyCustomColor(this.value)">
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+        <button class="btn btn-secondary" onclick="resetTheme()">Zurücksetzen</button>
+        <button class="btn btn-primary" onclick="closeModal('adminModal')">Fertig</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Export/Import Modal -->
+<div class="modal-overlay" id="exportModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">📦 Vokabeln sichern</div>
+      <button class="modal-close" onclick="closeModal('exportModal')">✕</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <button class="btn btn-primary" onclick="exportVocabs()">⬇️ Alle Vokabeln herunterladen (.json)</button>
+      <div style="border-top:1px solid var(--border);padding-top:12px">
+        <label class="form-label">Vokabeln hochladen & wiederherstellen</label>
+        <div class="file-upload-area" onclick="this.querySelector('input').click()">
+          <input type="file" accept=".json" onchange="importVocabs(this)">
+          <div>📁 JSON-Datei auswählen</div>
+        </div>
+        <div class="form-hint" style="margin-top:6px">⚠️ Bestehende Vokabeln bleiben erhalten, neue werden hinzugefügt.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Language Modal -->
+<div class="modal-overlay" id="langModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="langModalTitle">Sprache hinzufügen</div>
+      <button class="modal-close" onclick="closeModal('langModal')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Name</label>
+      <input class="form-input" id="langName" placeholder="z.B. Japanisch">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Code</label>
+        <input class="form-input" id="langCode" placeholder="z.B. ja">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Flagge (Emoji)</label>
+        <input class="form-input" id="langFlag" placeholder="🇯🇵">
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-secondary" onclick="closeModal('langModal')">Abbrechen</button>
+      <button class="btn btn-primary" onclick="saveLang()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Vocab Modal -->
+<div class="modal-overlay" id="vocabModal">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <div class="modal-title" id="vocabModalTitle">Vokabel hinzufügen</div>
+      <button class="modal-close" onclick="closeModal('vocabModal')">✕</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Zielsprache (wird angezeigt)</label>
+        <input class="form-input" id="vocabTarget" placeholder="Wort/Satz in Zielsprache">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Beschreibung (rechts)</label>
+        <input class="form-input" id="vocabDesc" placeholder="Kurze Erklärung">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Übersetzung Deutsch</label>
+        <input class="form-input" id="vocabTransDe" placeholder="Deutsche Übersetzung">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Übersetzung Englisch</label>
+        <input class="form-input" id="vocabTransEn" placeholder="English translation">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Korrekte Antwort für Abfrage (DE)</label>
+        <input class="form-input" id="vocabCorrectDe" placeholder="Falls abweichend von Übersetzung">
+        <div class="form-hint">Leer lassen = Übersetzung Deutsch wird verwendet</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Korrekte Antwort für Abfrage (EN)</label>
+        <input class="form-input" id="vocabCorrectEn" placeholder="If different from translation">
+        <div class="form-hint">Leer lassen = Übersetzung Englisch wird verwendet</div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">MP3 hochladen (Aussprache)</label>
+      <div class="file-upload-area" onclick="this.querySelector('input').click()">
+        <input type="file" accept=".mp3,.wav,.ogg,.m4a" onchange="stageVocabAudio(this)">
+        <div id="vocabAudioLabel">📁 Klicken um Audio-Datei auszuwählen</div>
+      </div>
+      <div id="vocabCurrentAudio" style="display:none;margin-top:6px;font-size:0.82rem;color:var(--accent4)">
+        🎵 Aktuell: <span id="vocabAudioFile"></span>
+        <button class="audio-btn secondary btn-sm" style="margin-left:8px" onclick="playAudio(document.getElementById('vocabAudioFilePath').value)">▶ Testen</button>
+        <button class="btn btn-danger btn-sm" style="margin-left:4px" onclick="removeVocabAudio()">🗑️ Audio löschen</button>
+        <input type="hidden" id="vocabAudioFilePath">
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-secondary" onclick="closeModal('vocabModal')">Abbrechen</button>
+      <button class="btn btn-primary" onclick="saveVocab()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Page Modal -->
+<div class="modal-overlay" id="pageModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="pageModalTitle">Seite hinzufügen</div>
+      <button class="modal-close" onclick="closeModal('pageModal')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Seitenname</label>
+      <input class="form-input" id="pageName" placeholder="z.B. Lektion 1 - Begrüßung">
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-secondary" onclick="closeModal('pageModal')">Abbrechen</button>
+      <button class="btn btn-primary" onclick="savePage()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- Quiz Setup Modal -->
+<div class="modal-overlay" id="quizSetupModal">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <div class="modal-title">🎯 Abfrage einrichten</div>
+      <button class="modal-close" onclick="closeModal('quizSetupModal')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Seite auswählen</label>
+      <select class="form-select" id="quizPageSelect">
+        <option value="all">Alle Seiten</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Richtung</label>
+      <div class="quiz-option-grid">
+        <div class="quiz-option-btn selected" data-dir="lang_to_de" onclick="selectQuizDir(this)">Sprache → Deutsch</div>
+        <div class="quiz-option-btn" data-dir="de_to_lang" onclick="selectQuizDir(this)">Deutsch → Sprache</div>
+        <div class="quiz-option-btn" data-dir="random" onclick="selectQuizDir(this)">🎲 Zufällig</div>
+      </div>
+      <div class="quiz-option-grid" style="margin-top:8px">
+        <div class="quiz-option-btn" data-dir="lang_to_en" onclick="selectQuizDir(this)">Sprache → Englisch</div>
+        <div class="quiz-option-btn" data-dir="en_to_lang" onclick="selectQuizDir(this)">Englisch → Sprache</div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Anzahl Vokabeln</label>
+      <input class="form-input" id="quizCount" type="number" min="1" value="10" placeholder="10">
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-secondary" onclick="closeModal('quizSetupModal')">Abbrechen</button>
+      <button class="btn btn-primary" onclick="startQuiz()">Abfrage starten →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Grammar Entry Modal -->
+<div class="modal-overlay" id="grammarModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="grammarModalTitle">Grammatik-Regel</div>
+      <button class="modal-close" onclick="closeModal('grammarModal')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Titel</label>
+      <input class="form-input" id="grammarTitle" placeholder="z.B. Verb-Konjugation Präsens">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Kategorie</label>
+      <input class="form-input" id="grammarCategory" placeholder="z.B. Verben, Nomen, Adjektive...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Inhalt</label>
+      <textarea class="form-textarea" id="grammarContent" style="min-height:140px" placeholder="Erkläre die Regel hier..."></textarea>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-secondary" onclick="closeModal('grammarModal')">Abbrechen</button>
+      <button class="btn btn-primary" onclick="saveGrammar()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- Declension Modal -->
+<div class="modal-overlay" id="declensionModal">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <div class="modal-title" id="declensionModalTitle">Deklination</div>
+      <button class="modal-close" onclick="closeModal('declensionModal')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Wort</label>
+      <input class="form-input" id="declensionWord" placeholder="Das Wort das dekliniert wird">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Flexionstabelle (JSON)</label>
+      <textarea class="form-textarea" id="declensionTable" style="min-height:120px;font-family:monospace;font-size:0.82rem" placeholder='{"Nominativ":{"Singular":"der Mann","Plural":"die Männer"},"Genitiv":{"Singular":"des Mannes","Plural":"der Männer"}}'></textarea>
+      <div class="form-hint">Trage die Deklination als JSON ein. Zeilen = Kasus, Spalten = Numerus.</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notizen</label>
+      <textarea class="form-textarea" id="declensionNotes" placeholder="Besonderheiten, Ausnahmen..."></textarea>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-secondary" onclick="closeModal('declensionModal')">Abbrechen</button>
+      <button class="btn btn-primary" onclick="saveDeclension()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- Pronunciation/Info Modal -->
+<div class="modal-overlay" id="pronunciationModal">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <div class="modal-title">Aussprache & Info bearbeiten</div>
+      <button class="modal-close" onclick="closeModal('pronunciationModal')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Aussprache-Leitfaden</label>
+      <textarea class="form-textarea" id="pronunciationGuide" style="min-height:120px" placeholder="Beschreibe wie die Sprache ausgesprochen wird..."></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Sprach-Info</label>
+      <textarea class="form-textarea" id="langInfoText" style="min-height:120px" placeholder="Interessantes über die Sprache, Herkunft, wo sie gesprochen wird..."></textarea>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-secondary" onclick="closeModal('pronunciationModal')">Abbrechen</button>
+      <button class="btn btn-primary" onclick="savePronunciation()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- Character Modal -->
+<div class="modal-overlay" id="charModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="charModalTitle">Schriftzeichen hinzufügen</div>
+      <button class="modal-close" onclick="closeModal('charModal')">✕</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Zeichen</label>
+        <input class="form-input" id="charChar" style="font-size:1.5rem;text-align:center" placeholder="字">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Romanisierung</label>
+        <input class="form-input" id="charRoman" placeholder="z.B. ji">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Bedeutung</label>
+      <input class="form-input" id="charMeaning" placeholder="Bedeutung auf Deutsch">
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-secondary" onclick="closeModal('charModal')">Abbrechen</button>
+      <button class="btn btn-primary" onclick="saveCharacter()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- Subject Modal -->
+<div class="modal-overlay" id="subjectModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Fach hinzufügen</div>
+      <button class="modal-close" onclick="closeModal('subjectModal')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Fachname</label>
+      <input class="form-input" id="subjectName" placeholder="z.B. Mathematik, Geschichte...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Emoji Icon</label>
+      <input class="form-input" id="subjectIcon" placeholder="📐">
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-secondary" onclick="closeModal('subjectModal')">Abbrechen</button>
+      <button class="btn btn-primary" onclick="saveSubject()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- Subject Card Modal (erweitert) -->
+<div class="modal-overlay" id="subjectCardModal">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <div class="modal-title" id="scModalTitle">Lernkarte erstellen</div>
+      <button class="modal-close" onclick="closeModal('subjectCardModal')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Kartentyp</label>
+      <div style="display:flex;gap:8px">
+        <div class="quiz-option-btn selected" data-ctype="text" onclick="selectCardType(this,'text')">📝 Text</div>
+        <div class="quiz-option-btn" data-ctype="multiple_choice" onclick="selectCardType(this,'multiple_choice')">☑️ Multiple Choice</div>
+        <div class="quiz-option-btn" data-ctype="image_question" onclick="selectCardType(this,'image_question')">🖼️ Bild-Frage</div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Frage / Begriff</label>
+      <input class="form-input" id="scQuestion" placeholder="Was ist...">
+    </div>
+    <div id="scQuestionImageWrap" style="display:none" class="form-group">
+      <label class="form-label">Bild zur Frage</label>
+      <div class="file-upload-area" onclick="this.querySelector('input').click()">
+        <input type="file" accept=".jpg,.jpeg,.png,.gif,.webp" onchange="stageScImage(this,'question')">
+        <div id="scQImgLabel">🖼️ Bild hochladen (JPG/PNG)</div>
+      </div>
+      <div id="scQImgPreview" style="display:none;margin-top:8px">
+        <img id="scQImgPreviewImg" style="max-width:200px;max-height:150px;border-radius:8px;border:1px solid var(--border)">
+        <button class="btn btn-danger btn-sm" style="margin-left:8px" onclick="removeScImage('question')">Entfernen</button>
+      </div>
+    </div>
+    <div id="scTextSection">
+      <div class="form-group">
+        <label class="form-label">Antwort / Erklärung</label>
+        <textarea class="form-textarea" id="scAnswer" placeholder="Die Antwort..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Korrekte Antwort für Abfrage</label>
+        <input class="form-input" id="scCorrect" placeholder="Kurzantwort (leer = Antwort-Feld)">
+      </div>
+    </div>
+    <div id="scMCSection" style="display:none">
+      <div class="form-group">
+        <label class="form-label">Antwortmöglichkeiten</label>
+        <div id="scOptionsList"></div>
+        <button class="btn btn-secondary btn-sm" style="margin-top:8px" onclick="addScOption()">+ Antwort hinzufügen</button>
+        <div class="form-hint">Haken = korrekte Antwort. Mehrere korrekte Antworten möglich.</div>
+      </div>
+    </div>
+    <div id="scImageAnswerWrap" style="display:none" class="form-group">
+      <label class="form-label">Bild zur Antwort</label>
+      <div class="file-upload-area" onclick="this.querySelector('input').click()">
+        <input type="file" accept=".jpg,.jpeg,.png,.gif,.webp" onchange="stageScImage(this,'answer')">
+        <div id="scAImgLabel">🖼️ Bild hochladen (JPG/PNG)</div>
+      </div>
+      <div id="scAImgPreview" style="display:none;margin-top:8px">
+        <img id="scAImgPreviewImg" style="max-width:200px;max-height:150px;border-radius:8px;border:1px solid var(--border)">
+        <button class="btn btn-danger btn-sm" style="margin-left:8px" onclick="removeScImage('answer')">Entfernen</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-secondary" onclick="closeModal('subjectCardModal')">Abbrechen</button>
+      <button class="btn btn-primary" onclick="saveSubjectCard()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- Character Practice Modal -->
+<div class="modal-overlay" id="charPracticeModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="charPracticeTitle">Zeichen nachmalen</div>
+      <button class="modal-close" onclick="closeModal('charPracticeModal')">✕</button>
+    </div>
+    <div style="text-align:center">
+      <div class="char-display" id="charPracticeChar"></div>
+      <div style="font-size:0.85rem;color:var(--text3);margin-bottom:12px" id="charPracticeInfo"></div>
+      <div class="char-canvas-wrap">
+        <canvas class="char-canvas" id="charCanvas" width="280" height="280"></canvas>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:12px">
+        <button class="btn btn-secondary" onclick="clearCharCanvas()">🗑️ Löschen</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!--                      JAVASCRIPT                            -->
+<!-- ============================================================ -->
+<script>
+// ==================== STATE ====================
+const API = '';
+let state = {
+  editMode: false,
+  currentLang: null,
+  currentPage: null,
+  vocabMode: 'word', // 'word' | 'sentence'
+  languages: [],
+  pages: [],
+  vocabs: [],
+  allVocabs: [], // unfiltered
+  grammar: [],
+  declensions: [],
+  characters: [],
+  subjects: [],
+  subjectCards: [],
+  currentSubject: null,
+  editingVocab: null,
+  editingGrammar: null,
+  editingDeclension: null,
+  editingCharacter: null,
+  stagedAudioFile: null,
+  locks: {},
+  userId: null,
+  ws: null,
+  quiz: {
+    items: [], current: 0, points: 0, maxPoints: 0,
+    direction: 'lang_to_de', wrongCount: 0, results: [],
+    startTime: null, questionStartTime: null,
+    stopwatchInterval: null, elapsedMs: 0,
+    forcedType: null // 'word'|'sentence'|null
+  }
+};
+
+// ==================== INIT ====================
+async function init() {
+  await loadLanguages();
+  await loadSubjects();
+  renderLangDropdown();
+  renderHomeGrid();
+  renderSubjectGrid();
+  renderSubjectSidebar();
+  initWebSocket();
+}
+
+// ==================== WEBSOCKET ====================
+function initWebSocket() {
+  const wsProto = location.protocol === 'https:' ? 'wss' : 'ws';
+  const wsUrl = `${wsProto}://${location.host}/ws`;
+  try {
+    state.ws = new WebSocket(wsUrl);
+    state.ws.onmessage = (e) => {
+      const data = JSON.parse(e.data);
+      if (data.type === 'connected') {
+        state.userId = data.userId;
+        state.locks = data.locks || {};
+      } else if (data.type === 'lock_update') {
+        state.locks = data.locks || {};
+        updateLockUI();
+      } else if (data.type === 'lock_granted') {
+        notify('Sprache gesperrt. Du kannst jetzt bearbeiten.', 'success');
+      } else if (data.type === 'lock_denied') {
+        notify('Diese Sprache wird gerade von jemand anderem bearbeitet.', 'error');
+        state.editMode = false;
+        updateEditModeUI();
+      } else if (data.type === 'vocab_added') {
+        if (state.currentPage && data.vocab.page_id === state.currentPage.id) {
+          state.vocabs.push(data.vocab);
+          renderVocabs();
+        }
+      } else if (data.type === 'vocab_updated') {
+        const idx = state.vocabs.findIndex(v => v.id === data.vocab.id);
+        if (idx !== -1) { state.vocabs[idx] = data.vocab; renderVocabs(); }
+      } else if (data.type === 'vocab_deleted') {
+        state.vocabs = state.vocabs.filter(v => v.id !== data.vocabId);
+        renderVocabs();
+      } else if (data.type === 'language_added') {
+        state.languages.push(data.language);
+        renderLangDropdown(); renderHomeGrid();
+      } else if (data.type === 'language_deleted') {
+        state.languages = state.languages.filter(l => l.id !== data.languageId);
+        renderLangDropdown(); renderHomeGrid();
+      }
+    };
+    state.ws.onerror = () => {};
+    state.ws.onclose = () => setTimeout(initWebSocket, 3000);
+  } catch(e) {}
+}
+
+function wsLock(langId) {
+  if (state.ws && state.ws.readyState === 1) {
+    state.ws.send(JSON.stringify({ type: 'lock', langId }));
+  }
+}
+function wsUnlock(langId) {
+  if (state.ws && state.ws.readyState === 1) {
+    state.ws.send(JSON.stringify({ type: 'unlock', langId }));
+  }
+}
+
+function updateLockUI() {
+  if (!state.currentLang) return;
+  const lock = state.locks[state.currentLang.id];
+  const el = document.getElementById('langLockStatus');
+  if (!el) return;
+  if (lock && lock.userId !== state.userId) {
+    el.innerHTML = '<span class="lock-badge">🔒 Wird bearbeitet</span>';
+  } else {
+    el.innerHTML = '';
+  }
+}
+
+// ==================== API HELPERS ====================
+async function api(method, path, body, isFormData) {
+  const opts = { method, headers: {} };
+  if (body && !isFormData) {
+    opts.headers['Content-Type'] = 'application/json';
+    opts.body = JSON.stringify(body);
+  } else if (isFormData) {
+    opts.body = body;
+  }
+  const r = await fetch(API + path, opts);
+  const data = await r.json();
+  if (!r.ok) throw new Error(data.error || 'Fehler');
+  return data;
+}
+
+// ==================== AUTH ====================
+function toggleEditMode() {
+  if (state.editMode) {
+    state.editMode = false;
+    if (state.currentLang) wsUnlock(state.currentLang.id);
+    updateEditModeUI();
+    notify('Bearbeitungsmodus deaktiviert', 'info');
+  } else {
+    openModal('passwordModal');
+    setTimeout(() => document.getElementById('passwordInput').focus(), 100);
+  }
+}
+
+function getEditPassword() {
+  return localStorage.getItem('ovok_edit_password') || '0000';
+}
+
+function submitPassword() {
+  const pw = document.getElementById('passwordInput').value;
+  document.getElementById('passwordInput').value = '';
+  if (pw === 'Momo') {
+    closeModal('passwordModal');
+    openAdminMenu();
+  } else if (pw === getEditPassword()) {
+    state.editMode = true;
+    closeModal('passwordModal');
+    if (state.currentLang) wsLock(state.currentLang.id);
+    updateEditModeUI();
+    notify('Bearbeitungsmodus aktiviert ✅', 'success');
+  } else {
+    notify('Falsches Passwort!', 'error');
+  }
+}
+
+function openAdminMenu() {
+  document.getElementById('newPassword').value = '';
+  document.getElementById('newPasswordConfirm').value = '';
+  switchAdminTab('password', document.querySelector('#adminModal .tab'));
+  renderThemePresets();
+  openModal('adminModal');
+}
+
+function switchAdminTab(tab, el) {
+  document.querySelectorAll('#adminModal .tab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+  document.getElementById('adminTabPassword').style.display = tab === 'password' ? 'block' : 'none';
+  document.getElementById('adminTabTheme').style.display = tab === 'theme' ? 'block' : 'none';
+}
+
+function saveNewPassword() {
+  const pw = document.getElementById('newPassword').value;
+  const pw2 = document.getElementById('newPasswordConfirm').value;
+  if (!pw) { notify('Bitte Passwort eingeben', 'error'); return; }
+  if (pw !== pw2) { notify('Passwörter stimmen nicht überein!', 'error'); return; }
+  if (pw === 'Momo') { notify('Dieses Passwort ist reserviert!', 'error'); return; }
+  localStorage.setItem('ovok_edit_password', pw);
+  notify('Passwort gespeichert ✅', 'success');
+  closeModal('adminModal');
+}
+
+// ==================== THEME ====================
+const THEME_PRESETS = [
+  { name: 'Dunkel', bg: '#0d0f14', bg2: '#13161e', bg3: '#1a1e2a', bg4: '#222637', surface: '#1e2130', border: '#2e3450', text: '#e8eaf0', text2: '#a0a8c0', text3: '#6878a0' },
+  { name: 'Mitternacht', bg: '#090d1a', bg2: '#0e1225', bg3: '#131830', bg4: '#1a2040', surface: '#141a2e', border: '#1e2a50', text: '#dde3ff', text2: '#8090c0', text3: '#506090' },
+  { name: 'Wald', bg: '#0a110d', bg2: '#0f1912', bg3: '#152018', bg4: '#1c2a20', surface: '#122016', border: '#1e3428', text: '#d4edd8', text2: '#7aaa80', text3: '#4a7a50' },
+  { name: 'Warm', bg: '#140f0a', bg2: '#1e160e', bg3: '#271c12', bg4: '#322318', surface: '#211a10', border: '#3a2a1a', text: '#f0e6d4', text2: '#c09060', text3: '#806040' },
+  { name: 'Lila', bg: '#0e0a18', bg2: '#150f22', bg3: '#1c152c', bg4: '#231a38', surface: '#180e28', border: '#2e1e50', text: '#e8d8ff', text2: '#9070c0', text3: '#604090' },
+  { name: 'Hell', bg: '#f4f6fa', bg2: '#ebedf5', bg3: '#e0e4f0', bg4: '#d4d8ec', surface: '#ffffff', border: '#c8cce0', text: '#1a1e30', text2: '#4a5070', text3: '#8090b0' },
+  { name: 'Grau', bg: '#111214', bg2: '#18191c', bg3: '#202224', bg4: '#28292c', surface: '#1c1d20', border: '#303236', text: '#e4e6ec', text2: '#9098a8', text3: '#606878' },
+  { name: 'Ozean', bg: '#050f1a', bg2: '#081420', bg3: '#0c1c2c', bg4: '#102538', surface: '#091622', border: '#142840', text: '#d0eaff', text2: '#5090c0', text3: '#306080' },
+];
+
+function renderThemePresets() {
+  const container = document.getElementById('themePresets');
+  const current = localStorage.getItem('ovok_theme') || 'Dunkel';
+  container.innerHTML = THEME_PRESETS.map(t => `
+    <div onclick="applyTheme('${t.name}')" style="
+      padding:10px 6px; text-align:center; border-radius:8px; cursor:pointer;
+      background:${t.bg2}; border:2px solid ${t.name===current ? '#4f8ef7' : t.border};
+      color:${t.text}; font-size:0.78rem; font-weight:600;
+      transition:all 0.2s;
+    ">${t.name}</div>
+  `).join('');
+}
+
+function applyTheme(name) {
+  const t = THEME_PRESETS.find(p => p.name === name);
+  if (!t) return;
+  localStorage.setItem('ovok_theme', name);
+  localStorage.removeItem('ovok_custom_bg');
+  applyThemeVars(t);
+  renderThemePresets();
+  notify('Thema gewechselt: ' + name, 'success');
+}
+
+function applyCustomColor(hex) {
+  // Generate a theme from custom color
+  localStorage.setItem('ovok_custom_bg', hex);
+  // Convert hex to slightly lighter/darker variants
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  const lum = (r*0.299+g*0.587+b*0.114)/255;
+  const isDark = lum < 0.5;
+  const adj = (val, delta) => Math.max(0,Math.min(255,val+delta));
+  const toHex = (r,g,b) => '#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('');
+  const d = isDark ? 1 : -1;
+  const t = {
+    bg: hex,
+    bg2: toHex(adj(r,d*6),adj(g,d*6),adj(b,d*6)),
+    bg3: toHex(adj(r,d*12),adj(g,d*12),adj(b,d*12)),
+    bg4: toHex(adj(r,d*20),adj(g,d*20),adj(b,d*20)),
+    surface: toHex(adj(r,d*8),adj(g,d*8),adj(b,d*8)),
+    border: toHex(adj(r,d*28),adj(g,d*28),adj(b,d*28)),
+    text: isDark ? '#e8eaf0' : '#1a1e30',
+    text2: isDark ? '#a0a8c0' : '#4a5070',
+    text3: isDark ? '#6878a0' : '#8090b0',
+  };
+  applyThemeVars(t);
+}
+
+function applyThemeVars(t) {
+  const root = document.documentElement;
+  root.style.setProperty('--bg', t.bg);
+  root.style.setProperty('--bg2', t.bg2);
+  root.style.setProperty('--bg3', t.bg3);
+  root.style.setProperty('--bg4', t.bg4);
+  root.style.setProperty('--surface', t.surface);
+  root.style.setProperty('--border', t.border);
+  root.style.setProperty('--text', t.text);
+  root.style.setProperty('--text2', t.text2);
+  root.style.setProperty('--text3', t.text3);
+}
+
+function resetTheme() {
+  localStorage.removeItem('ovok_theme');
+  localStorage.removeItem('ovok_custom_bg');
+  applyTheme('Dunkel');
+  notify('Thema zurückgesetzt', 'info');
+}
+
+function loadSavedTheme() {
+  const custom = localStorage.getItem('ovok_custom_bg');
+  if (custom) { applyCustomColor(custom); return; }
+  const saved = localStorage.getItem('ovok_theme');
+  if (saved) applyTheme(saved);
+}
+
+function updateEditModeUI() {
+  const btn = document.getElementById('editModeBtn');
+  btn.textContent = state.editMode ? '🔓 Bearbeiten aktiv' : '✏️ Bearbeiten';
+  btn.classList.toggle('active', state.editMode);
+  // Show/hide edit buttons
+  document.querySelectorAll('[id$="EditBtns"]').forEach(el => {
+    el.style.display = state.editMode ? (el.style.display === 'none' || !el.style.display ? 'flex' : 'flex') : 'none';
+  });
+  document.getElementById('addPageBtn').style.display = state.editMode ? 'flex' : 'none';
+  document.getElementById('addSubjectNavBtn').style.display = state.editMode ? 'flex' : 'none';
+  document.getElementById('homeEditBtns').style.display = state.editMode ? 'flex' : 'none';
+  document.getElementById('subjectEditBtns').style.display = state.editMode ? 'flex' : 'none';
+  document.getElementById('langDetailEditBtns').style.display = state.editMode ? 'flex' : 'none';
+  // Re-render to show edit buttons in tables
+  if (document.getElementById('catalogScreen').classList.contains('active')) renderVocabs();
+}
+
+// ==================== SCREENS ====================
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(name + 'Screen').classList.add('active');
+  // Sidebar state
+  document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+  if (name === 'home') document.getElementById('sideHome').classList.add('active');
+  if (name === 'catalog') document.getElementById('sideCatalog').classList.add('active');
+  // Show pages nav when in catalog
+  document.getElementById('pagesNav').style.display = (name === 'catalog') ? 'block' : 'none';
+  // Geo canvas needs init when shown
+  if (name === 'geo') setTimeout(initGeoCanvas, 50);
+}
+
+function setVocabMode(mode) {
+  state.vocabMode = mode;
+  document.getElementById('btnWords').classList.toggle('active', mode === 'word');
+  document.getElementById('btnSentences').classList.toggle('active', mode === 'sentence');
+  if (state.currentLang) {
+    loadPages(state.currentLang.id);
+    showScreen('catalog');
+  }
+}
+
+// ==================== LANGUAGES ====================
+async function loadLanguages() {
+  try {
+    state.languages = await api('GET', '/api/languages');
+  } catch(e) { notify('Fehler beim Laden der Sprachen', 'error'); }
+}
+
+function renderHomeGrid() {
+  const grid = document.getElementById('langGrid');
+  if (!state.languages.length) {
+    grid.innerHTML = '<div class="empty-state"><div class="icon">🌐</div>Noch keine Sprachen.</div>';
+    return;
+  }
+  grid.innerHTML = state.languages.map(l => `
+    <div class="lang-card" onclick="openLanguage('${l.id}')">
+      <div class="lang-card-flag">${l.flag || '🌐'}</div>
+      <div class="lang-card-name">${esc(l.name)}</div>
+      <div class="lang-card-code">${esc(l.code)}</div>
+      ${state.editMode ? `
+        <div class="lang-card-actions" onclick="event.stopPropagation()">
+          <button class="btn btn-secondary btn-sm" onclick="openEditLanguage('${l.id}')">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteLanguage('${l.id}')">🗑️</button>
+        </div>
+      ` : ''}
+    </div>
+  `).join('');
+}
+
+function renderLangDropdown() {
+  const panel = document.getElementById('langDropdownPanel');
+  panel.innerHTML = state.languages.map(l => `
+    <div class="lang-option ${state.currentLang?.id === l.id ? 'active' : ''}" onclick="selectLangFromDropdown('${l.id}')">
+      <span>${l.flag || '🌐'}</span>
+      <span>${esc(l.name)}</span>
+    </div>
+  `).join('') || '<div style="padding:10px 14px;color:var(--text3);font-size:0.85rem">Keine Sprachen</div>';
+}
+
+function toggleLangDropdown() {
+  document.getElementById('langDropdownPanel').classList.toggle('open');
+}
+document.addEventListener('click', (e) => {
+  if (!document.getElementById('langDropdown').contains(e.target)) {
+    document.getElementById('langDropdownPanel').classList.remove('open');
+  }
+});
+
+function selectLangFromDropdown(id) {
+  const lang = state.languages.find(l => l.id === id);
+  if (!lang) return;
+  document.getElementById('langDropdownPanel').classList.remove('open');
+  openLanguage(id);
+}
+
+function openLanguage(id) {
+  const lang = state.languages.find(l => l.id === id);
+  if (!lang) return;
+  state.currentLang = lang;
+  document.getElementById('langDropdownFlag').textContent = lang.flag || '🌐';
+  document.getElementById('langDropdownName').textContent = lang.name;
+  document.getElementById('langDetailFlag').textContent = lang.flag || '🌐';
+  document.getElementById('langDetailName').textContent = lang.name;
+  updateLockUI();
+  showScreen('langDetail');
+}
+
+function openFeature(feature) {
+  if (feature === 'catalog') { setVocabMode('word'); }
+  else if (feature === 'sentences') { setVocabMode('sentence'); }
+  else if (feature === 'grammar') { loadGrammar(); showScreen('grammar'); }
+  else if (feature === 'declension') { loadDeclensions(); showScreen('declension'); }
+  else if (feature === 'pronunciation') { loadPronunciation(); showScreen('pronunciation'); }
+}
+
+function backToLangDetail() {
+  showScreen('langDetail');
+}
+
+function openAddLanguage() {
+  document.getElementById('langModalTitle').textContent = 'Sprache hinzufügen';
+  document.getElementById('langName').value = '';
+  document.getElementById('langCode').value = '';
+  document.getElementById('langFlag').value = '';
+  state._editingLangId = null;
+  openModal('langModal');
+}
+
+function openEditLanguage(id) {
+  const lang = id ? state.languages.find(l => l.id === id) : state.currentLang;
+  if (!lang) return;
+  document.getElementById('langModalTitle').textContent = 'Sprache bearbeiten';
+  document.getElementById('langName').value = lang.name;
+  document.getElementById('langCode').value = lang.code;
+  document.getElementById('langFlag').value = lang.flag || '';
+  state._editingLangId = lang.id;
+  openModal('langModal');
+}
+
+async function saveLang() {
+  const name = document.getElementById('langName').value.trim();
+  const code = document.getElementById('langCode').value.trim();
+  const flag = document.getElementById('langFlag').value.trim();
+  if (!name || !code) { notify('Name und Code erforderlich', 'error'); return; }
+  try {
+    if (state._editingLangId) {
+      const updated = await api('PUT', `/api/languages/${state._editingLangId}`, { name, code, flag });
+      const idx = state.languages.findIndex(l => l.id === state._editingLangId);
+      if (idx !== -1) state.languages[idx] = updated;
+      if (state.currentLang?.id === state._editingLangId) state.currentLang = updated;
+    } else {
+      const lang = await api('POST', '/api/languages', { name, code, flag });
+      state.languages.push(lang);
+    }
+    closeModal('langModal');
+    renderLangDropdown(); renderHomeGrid();
+    notify('Sprache gespeichert ✅', 'success');
+  } catch(e) { notify(e.message, 'error'); }
+}
+
+async function deleteCurrentLanguage() {
+  if (!confirm(`Sprache "${state.currentLang?.name}" wirklich löschen?`)) return;
+  await deleteLanguage(state.currentLang.id);
+  showScreen('home');
+}
+
+async function deleteLanguage(id) {
+  try {
+    await api('DELETE', `/api/languages/${id}`);
+    state.languages = state.languages.filter(l => l.id !== id);
+    renderLangDropdown(); renderHomeGrid();
+    notify('Sprache gelöscht', 'info');
+  } catch(e) { notify(e.message, 'error'); }
+}
+
+// ==================== PAGES ====================
+async function loadPages(langId) {
+  try {
+    state.pages = await api('GET', `/api/languages/${langId}/pages?type=${state.vocabMode}`);
+    renderPagesList();
+    if (state.pages.length > 0) {
+      selectPage(state.pages[0]);
+    } else {
+      state.currentPage = null;
+      state.vocabs = [];
+      renderVocabs();
+    }
+    document.getElementById('catalogTitle').textContent = 
+      `${state.currentLang?.flag || ''} ${state.currentLang?.name} — ${state.vocabMode === 'word' ? 'Wörter' : 'Sätze'}`;
+  } catch(e) { notify('Fehler beim Laden der Seiten', 'error'); }
+}
+
+function renderPagesList() {
+  const list = document.getElementById('pagesList');
+  list.innerHTML = state.pages.map(p => `
+    <div class="page-item ${state.currentPage?.id === p.id ? 'active' : ''}" onclick="selectPage(${JSON.stringify(p).replace(/"/g, '&quot;')})">
+      <span>📄</span>
+      <span style="flex:1;overflow:hidden;text-overflow:ellipsis">${esc(p.name)}</span>
+      ${state.editMode ? `<button class="btn-icon danger" onclick="event.stopPropagation();deletePage('${p.id}')" title="Löschen">✕</button>` : ''}
+    </div>
+  `).join('');
+  document.getElementById('pagesNav').style.display = 'block';
+}
+
+async function selectPage(page) {
+  state.currentPage = page;
+  renderPagesList();
+  await loadVocabs(page.id);
+  updatePageAudioBar();
+}
+
+function updatePageAudioBar() {
+  const bar = document.getElementById('pageAudioBar');
+  const uploadWrap = document.getElementById('pageAudioUploadWrap');
+  uploadWrap.style.display = state.editMode ? 'block' : 'none';
+  const playBtn = document.getElementById('pageAudioPlayBtn');
+  if (state.currentPage?.page_audio_url) {
+    playBtn.style.display = 'flex';
+    playBtn.innerHTML = '▶ Seiten-Audio abspielen';
+  } else {
+    playBtn.style.display = state.editMode ? 'flex' : 'none';
+    playBtn.innerHTML = '▶ Kein Audio';
+  }
+}
+
+function openAddPage() {
+  if (!state.currentLang) { notify('Bitte zuerst eine Sprache auswählen', 'error'); return; }
+  document.getElementById('pageName').value = '';
+  state._editingPageId = null;
+  openModal('pageModal');
+}
+
+async function savePage() {
+  const name = document.getElementById('pageName').value.trim();
+  if (!name) { notify('Seitenname erforderlich', 'error'); return; }
+  try {
+    const page = await api('POST', `/api/languages/${state.currentLang.id}/pages`, {
+      name, type: state.vocabMode, order_index: state.pages.length
+    });
+    state.pages.push(page);
+    closeModal('pageModal');
+    selectPage(page);
+    renderPagesList();
+    notify('Seite erstellt ✅', 'success');
+  } catch(e) { notify(e.message, 'error'); }
+}
+
+async function deletePage(id) {
+  if (!confirm('Seite und alle Vokabeln löschen?')) return;
+  try {
+    await api('DELETE', `/api/pages/${id}`);
+    state.pages = state.pages.filter(p => p.id !== id);
+    if (state.currentPage?.id === id) {
+      state.currentPage = state.pages[0] || null;
+      if (state.currentPage) await loadVocabs(state.currentPage.id);
+      else { state.vocabs = []; renderVocabs(); }
+    }
+    renderPagesList();
+    notify('Seite gelöscht', 'info');
+  } catch(e) { notify(e.message, 'error'); }
+}
+
+async function uploadPageAudio(input) {
+  if (!input.files[0] || !state.currentPage) return;
+  const fd = new FormData();
+  fd.append('audio', input.files[0]);
+  try {
+    const data = await api('POST', `/api/pages/${state.currentPage.id}/audio`, fd, true);
+    state.currentPage.page_audio_url = data.url;
+    const idx = state.pages.findIndex(p => p.id === state.currentPage.id);
+    if (idx !== -1) state.pages[idx].page_audio_url = data.url;
+    updatePageAudioBar();
+    notify('Seiten-Audio hochgeladen ✅', 'success');
+  } catch(e) { notify(e.message, 'error'); }
+}
+
+function playPageAudio() {
+  if (!state.currentPage?.page_audio_url) { notify('Kein Audio für diese Seite', 'info'); return; }
+  const player = document.getElementById('pageAudioPlayer');
+  player.src = state.currentPage.page_audio_url;
+  player.play();
+}
+
+// ==================== VOCABS ====================
+async function loadVocabs(pageId) {
+  try {
+    state.vocabs = await api('GET', `/api/pages/${pageId}/vocabs`);
+    state.allVocabs = [...state.vocabs];
+    renderVocabs();
+  } catch(e) { notify('Fehler beim Laden der Vokabeln', 'error'); }
+}
+
+function renderVocabs(vocabs) {
+  const list = vocabs || state.vocabs;
+  const transLang = document.getElementById('transLangToggle')?.value || 'de';
+  const body = document.getElementById('vocabTableBody');
+  const langName = state.currentLang?.name || 'Zielsprache';
+  document.getElementById('colLang').textContent = langName;
+
+  if (!list.length) {
+    body.innerHTML = `<tr><td colspan="4"><div class="empty-state"><div class="icon">📖</div>Noch keine Vokabeln auf dieser Seite.</div></td></tr>`;
+    return;
+  }
+
+  body.innerHTML = list.map(v => {
+    const trans = transLang === 'en' ? (v.translation_en || v.translation_de || '—') : (v.translation_de || '—');
+    return `
+      <tr class="vocab-row">
+        <td><div class="vocab-target">${esc(v.target_word)}</div></td>
+        <td><div class="vocab-translation">${esc(trans)}</div></td>
+        <td><div class="vocab-desc">${esc(v.description || '')}</div></td>
+        <td>
+          <div class="vocab-actions">
+            ${v.audio_url ? `<button class="btn-icon" onclick="playAudio('${v.audio_url}')" title="Abspielen">🔊</button>` : ''}
+            ${state.editMode ? `
+              <button class="btn-icon" onclick="openEditVocab('${v.id}')" title="Bearbeiten">✏️</button>
+              <button class="btn-icon danger" onclick="deleteVocab('${v.id}')" title="Löschen">🗑️</button>
+              ${!v.audio_url ? `<label class="btn-icon" title="Audio hochladen" style="cursor:pointer">
+                🎵<input type="file" accept=".mp3,.wav,.ogg,.m4a" style="display:none" onchange="uploadVocabAudio('${v.id}',this)">
+              </label>` : ''}
+            ` : ''}
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+async function handleSearch(q) {
+  if (!state.currentLang) return;
+  if (!q.trim()) {
+    state.vocabs = [...state.allVocabs];
+    renderVocabs();
+    return;
+  }
+  try {
+    const results = await api('GET', `/api/languages/${state.currentLang.id}/vocabs/search?q=${encodeURIComponent(q)}&type=${state.vocabMode}`);
+    renderVocabs(results);
+  } catch(e) {}
+}
+
+function openAddVocab() {
+  if (!state.currentPage) { notify('Bitte zuerst eine Seite auswählen', 'error'); return; }
+  state.editingVocab = null;
+  state.stagedAudioFile = null;
+  document.getElementById('vocabModalTitle').textContent = 'Vokabel hinzufügen';
+  ['vocabTarget','vocabDesc','vocabTransDe','vocabTransEn','vocabCorrectDe','vocabCorrectEn'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('vocabAudioLabel').textContent = '📁 Klicken um Audio-Datei auszuwählen';
+  document.getElementById('vocabCurrentAudio').style.display = 'none';
+  openModal('vocabModal');
+}
+
+function openEditVocab(id) {
+  const v = state.vocabs.find(v => v.id === id);
+  if (!v) return;
+  state.editingVocab = v;
+  state.stagedAudioFile = null;
+  document.getElementById('vocabModalTitle').textContent = 'Vokabel bearbeiten';
+  document.getElementById('vocabTarget').value = v.target_word || '';
+  document.getElementById('vocabDesc').value = v.description || '';
+  document.getElementById('vocabTransDe').value = v.translation_de || '';
+  document.getElementById('vocabTransEn').value = v.translation_en || '';
+  document.getElementById('vocabCorrectDe').value = v.correct_answer_de || '';
+  document.getElementById('vocabCorrectEn').value = v.correct_answer_en || '';
+  if (v.audio_url) {
+    document.getElementById('vocabCurrentAudio').style.display = 'block';
+    document.getElementById('vocabAudioFile').textContent = v.audio_url.split('/').pop();
+    document.getElementById('vocabAudioFilePath').value = v.audio_url;
+  } else {
+    document.getElementById('vocabCurrentAudio').style.display = 'none';
+  }
+  openModal('vocabModal');
+}
+
+function stageVocabAudio(input) {
+  if (input.files[0]) {
+    state.stagedAudioFile = input.files[0];
+    document.getElementById('vocabAudioLabel').textContent = '✅ ' + input.files[0].name;
+  }
+}
+
+async function removeVocabAudio() {
+  if (state.editingVocab?.id && state.editingVocab.audio_url) {
+    try {
+      await api('DELETE', `/api/vocabs/${state.editingVocab.id}/audio`);
+      state.editingVocab.audio_url = null;
+      const idx = state.vocabs.findIndex(v => v.id === state.editingVocab.id);
+      if (idx !== -1) state.vocabs[idx].audio_url = null;
+      renderVocabs();
+      notify('Audio gelöscht ✅', 'success');
+    } catch(e) { notify(e.message, 'error'); }
+  }
+  state.stagedAudioFile = null;
+  document.getElementById('vocabCurrentAudio').style.display = 'none';
+  document.getElementById('vocabAudioLabel').textContent = '📁 Klicken um Audio-Datei auszuwählen';
+}
+
+async function saveVocab() {
+  const target = document.getElementById('vocabTarget').value.trim();
+  if (!target) { notify('Zielsprachen-Wort erforderlich', 'error'); return; }
+  const body = {
+    target_word: target,
+    description: document.getElementById('vocabDesc').value.trim(),
+    translation_de: document.getElementById('vocabTransDe').value.trim(),
+    translation_en: document.getElementById('vocabTransEn').value.trim(),
+    correct_answer_de: document.getElementById('vocabCorrectDe').value.trim(),
+    correct_answer_en: document.getElementById('vocabCorrectEn').value.trim(),
+  };
+  try {
+    let vocab;
+    if (state.editingVocab) {
+      if (state.editingVocab._removeAudio) body.audio_url = null;
+      vocab = await api('PUT', `/api/vocabs/${state.editingVocab.id}`, body);
+      const idx = state.vocabs.findIndex(v => v.id === vocab.id);
+      if (idx !== -1) state.vocabs[idx] = vocab;
+    } else {
+      body.order_index = state.vocabs.length;
+      vocab = await api('POST', `/api/pages/${state.currentPage.id}/vocabs`, body);
+      state.vocabs.push(vocab);
+    }
+    // Upload audio if staged
+    if (state.stagedAudioFile) {
+      const fd = new FormData();
+      fd.append('audio', state.stagedAudioFile);
+      const audioData = await api('POST', `/api/vocabs/${vocab.id}/audio`, fd, true);
+      const idx = state.vocabs.findIndex(v => v.id === vocab.id);
+      if (idx !== -1) state.vocabs[idx].audio_url = audioData.url;
+    }
+    state.allVocabs = [...state.vocabs];
+    closeModal('vocabModal');
+    renderVocabs();
+    notify('Vokabel gespeichert ✅', 'success');
+  } catch(e) { notify(e.message, 'error'); }
+}
+
+async function uploadVocabAudio(vocabId, input) {
+  if (!input.files[0]) return;
+  const fd = new FormData();
+  fd.append('audio', input.files[0]);
+  try {
+    const data = await api('POST', `/api/vocabs/${vocabId}/audio`, fd, true);
+    const idx = state.vocabs.findIndex(v => v.id === vocabId);
+    if (idx !== -1) state.vocabs[idx].audio_url = data.url;
+    renderVocabs();
+    notify('Audio hochgeladen ✅', 'success');
+  } catch(e) { notify(e.message, 'error'); }
+}
+
+async function deleteVocab(id) {
+  const v = state.vocabs.find(v => v.id === id);
+  const name = v ? v.target_word : 'diese Vokabel';
+  if (!confirm(`🗑️ Vokabel löschen?\n\n"${name}"\n\nDieser Vorgang kann nicht rückgängig gemacht werden.`)) return;
+  try {
+    await api('DELETE', `/api/vocabs/${id}`);
+    state.vocabs = state.vocabs.filter(v => v.id !== id);
+    state.allVocabs = [...state.vocabs];
+    renderVocabs();
+    notify('Vokabel gelöscht', 'info');
+  } catch(e) { notify(e.message, 'error'); }
+}
+
+function playAudio(url) {
+  const a = new Audio(url);
+  a.play().catch(() => notify('Audio konnte nicht abgespielt werden', 'error'));
+}
+
+// ==================== QUIZ ====================
+function openQuizSetup() {
+  if (!state.currentLang) { notify('Bitte zuerst eine Sprache auswählen', 'error'); return; }
+  // Populate page select
+  const sel = document.getElementById('quizPageSelect');
+  sel.innerHTML = '<option value="all">Alle Seiten</option>' +
+    state.pages.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('');
+  openModal('quizSetupModal');
+}
+
+function selectQuizDir(el) {
+  document.querySelectorAll('.quiz-option-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+async function startQuiz() {
+  const pageId = document.getElementById('quizPageSelect').value;
+  const count = parseInt(document.getElementById('quizCount').value) || 10;
+  const dirBtn = document.querySelector('.quiz-option-btn.selected');
+  const dir = dirBtn ? dirBtn.dataset.dir : 'lang_to_de';
+
+  // Load vocabs
+  let vocabs = [];
+  try {
+    if (pageId === 'all') {
+      for (const p of state.pages) {
+        const v = await api('GET', `/api/pages/${p.id}/vocabs`);
+        vocabs.push(...v);
+      }
+    } else {
+      vocabs = await api('GET', `/api/pages/${pageId}/vocabs`);
+    }
+  } catch(e) { notify('Fehler beim Laden der Vokabeln', 'error'); return; }
+
+  if (!vocabs.length) { notify('Keine Vokabeln auf der ausgewählten Seite', 'error'); return; }
+
+  // Shuffle and limit
+  vocabs = shuffle(vocabs).slice(0, count);
+
+  state.quiz = {
+    items: vocabs, current: 0, points: 0, maxPoints: vocabs.length,
+    direction: dir, wrongCount: 0, results: [],
+    startTime: Date.now(), questionStartTime: Date.now(),
+    stopwatchInterval: null, elapsedMs: 0,
+    forcedType: null
+  };
+
+  closeModal('quizSetupModal');
+  showScreen('quiz');
+  document.getElementById('quizResults').style.display = 'none';
+  document.getElementById('quizCard').style.display = 'block';
+  document.querySelector('.quiz-input-area').style.display = 'block';
+  document.getElementById('quizActions').style.display = 'flex';
+
+  startStopwatch();
+  renderQuizQuestion();
+}
+
+function startStopwatch() {
+  if (state.quiz.stopwatchInterval) clearInterval(state.quiz.stopwatchInterval);
+  state.quiz.stopwatchStart = Date.now();
+  state.quiz.stopwatchInterval = setInterval(() => {
+    const el = document.getElementById('stopwatchDisplay');
+    if (!el) return;
+    const elapsed = Date.now() - state.quiz.stopwatchStart;
+    el.textContent = formatTime(elapsed);
+  }, 100);
+}
+
+function formatTime(ms) {
+  const s = Math.floor(ms / 1000);
+  const m = Math.floor(s / 60);
+  const ss = s % 60;
+  return `${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
+}
+
+function renderQuizQuestion() {
+  const q = state.quiz;
+  const item = q.items[q.current];
+  if (!item) { finishQuiz(); return; }
+
+  document.getElementById('quizCurrent').textContent = q.current + 1;
+  document.getElementById('quizTotal').textContent = q.items.length;
+  document.getElementById('quizPoints').textContent = q.points.toFixed(1);
+  document.getElementById('quizProgressFill').style.width = `${(q.current / q.items.length) * 100}%`;
+  document.getElementById('quizFeedback').style.display = 'none';
+  document.getElementById('quizFeedback').className = 'quiz-feedback';
+  document.getElementById('quizSubmitBtn').style.display = 'inline-flex';
+  document.getElementById('quizNextBtn').style.display = 'none';
+  document.getElementById('quizInput').value = '';
+  document.getElementById('quizInput').className = 'quiz-input';
+  document.getElementById('quizInput').disabled = false;
+
+  let dir = q.direction;
+  if (dir === 'random') {
+    const dirs = ['lang_to_de','de_to_lang','lang_to_en','en_to_lang'];
+    dir = dirs[Math.floor(Math.random() * dirs.length)];
+    q._currentDir = dir;
+  } else {
+    q._currentDir = dir;
+  }
+
+  let questionWord = '', dirLabel = '';
+  if (dir === 'lang_to_de') {
+    questionWord = item.target_word;
+    dirLabel = `${state.currentLang?.name || 'Zielsprache'} → Deutsch`;
+  } else if (dir === 'de_to_lang') {
+    questionWord = item.translation_de || '(keine DE Übersetzung)';
+    dirLabel = `Deutsch → ${state.currentLang?.name || 'Zielsprache'}`;
+  } else if (dir === 'lang_to_en') {
+    questionWord = item.target_word;
+    dirLabel = `${state.currentLang?.name || 'Zielsprache'} → Englisch`;
+  } else if (dir === 'en_to_lang') {
+    questionWord = item.translation_en || item.translation_de || '(keine EN Übersetzung)';
+    dirLabel = `Englisch → ${state.currentLang?.name || 'Zielsprache'}`;
+  }
+
+  document.getElementById('quizDirectionLabel').textContent = dirLabel;
+  document.getElementById('quizWord').textContent = questionWord;
+  document.getElementById('quizDesc').textContent = item.description || '';
+
+  // Audio button
+  const audioBtn = document.getElementById('quizAudioBtn');
+  audioBtn.style.display = item.audio_url ? 'flex' : 'none';
+  audioBtn.dataset.url = item.audio_url || '';
+
+  q.wrongCount = 0;
+  q.questionStartTime = Date.now();
+  setTimeout(() => document.getElementById('quizInput').focus(), 100);
+}
+
+function getCorrectAnswer(item, dir) {
+  if (dir === 'lang_to_de') return item.correct_answer_de || item.translation_de || '';
+  if (dir === 'de_to_lang') return item.correct_answer_de ? item.target_word : item.target_word;
+  if (dir === 'lang_to_en') return item.correct_answer_en || item.translation_en || '';
+  if (dir === 'en_to_lang') return item.target_word;
+  return '';
+}
+
+function normalizeAnswer(s) {
+  return (s || '').toLowerCase().trim()
+    .replace(/[.,!?:]/g, '')
+    .replace(/\s+/g, ' ');
+}
+
+// Check if answer matches any alternative (split by , or ;)
+function checkAnswer(userAnswer, correctAnswer) {
+  const user = normalizeAnswer(userAnswer);
+  // Split correct answer by comma or semicolon to get alternatives
+  const alternatives = (correctAnswer || '')
+    .split(/[,;]/)
+    .map(a => normalizeAnswer(a))
+    .filter(a => a.length > 0);
+  return alternatives.some(alt => alt === user);
+}
+
+function submitQuizAnswer() {
+  const q = state.quiz;
+  const item = q.items[q.current];
+  const answer = document.getElementById('quizInput').value;
+  const correct = getCorrectAnswer(item, q._currentDir);
+  const isCorrect = checkAnswer(answer, correct);
+  const timeTaken = Date.now() - q.questionStartTime;
+
+  const fb = document.getElementById('quizFeedback');
+
+  if (isCorrect) {
+    let points = 0;
+    if (q.wrongCount === 0) points = 1;
+    else if (q.wrongCount <= 2) points = 0.5;
+    else points = 0;
+
+    q.points += points;
+    q.results.push({ item, answer, correct, isCorrect: true, wrongCount: q.wrongCount, points, timeTaken });
+
+    document.getElementById('quizInput').className = 'quiz-input correct';
+    fb.className = 'quiz-feedback correct-fb';
+    fb.innerHTML = `✅ Richtig! ${points < 1 ? `(${points} Punkt)` : '(1 Punkt)'}`;
+    fb.style.display = 'block';
+
+    document.getElementById('quizInput').disabled = true;
+    document.getElementById('quizSubmitBtn').style.display = 'none';
+    document.getElementById('quizNextBtn').style.display = 'inline-flex';
+
+  } else {
+    q.wrongCount++;
+
+    if (q.wrongCount >= 3) {
+      // Show correct answer, must retype for 0 points
+      fb.className = 'quiz-feedback show-answer-fb';
+      fb.innerHTML = `⚠️ 3 Fehler! Richtige Antwort: <strong>${esc(correct)}</strong><br>Tippe sie ab um fortzufahren (0 Punkte)`;
+      fb.style.display = 'block';
+      document.getElementById('quizInput').value = '';
+      document.getElementById('quizInput').className = 'quiz-input wrong';
+      // Force retype
+      q._forceRetype = correct;
+    } else {
+      fb.className = 'quiz-feedback wrong-fb';
+      fb.innerHTML = `❌ Falsch! Versuch ${q.wrongCount}/3`;
+      fb.style.display = 'block';
+      document.getElementById('quizInput').className = 'quiz-input wrong';
+      document.getElementById('quizInput').value = '';
+      setTimeout(() => {
+        document.getElementById('quizInput').className = 'quiz-input';
+        fb.style.display = 'none';
+        document.getElementById('quizInput').focus();
+      }, 1200);
+    }
+  }
+}
+
+// Check if forceRetype mode and user typed correct
+document.addEventListener('DOMContentLoaded', () => {});
+// We need to intercept submit when forceRetype is active
+const origSubmit = submitQuizAnswer;
+window.submitQuizAnswer = function() {
+  const q = state.quiz;
+  if (q._forceRetype) {
+    const answer = document.getElementById('quizInput').value;
+    if (checkAnswer(answer, q._forceRetype)) {
+      const item = q.items[q.current];
+      q.results.push({ item, answer, correct: q._forceRetype, isCorrect: false, wrongCount: q.wrongCount, points: 0, timeTaken: Date.now() - q.questionStartTime });
+      q._forceRetype = null;
+      document.getElementById('quizInput').className = 'quiz-input';
+      document.getElementById('quizFeedback').style.display = 'none';
+      document.getElementById('quizSubmitBtn').style.display = 'none';
+      document.getElementById('quizNextBtn').style.display = 'inline-flex';
+    } else {
+      notify('Bitte tippe die angezeigte Antwort ab!', 'error');
+    }
+    return;
+  }
+  origSubmit();
+};
+
+function dontKnow() {
+  const q = state.quiz;
+  const item = q.items[q.current];
+  const correct = getCorrectAnswer(item, q._currentDir);
+  const timeTaken = Date.now() - q.questionStartTime;
+
+  q.results.push({ item, answer: '(nicht gewusst)', correct, isCorrect: false, wrongCount: 99, points: 0, timeTaken });
+  q._forceRetype = null;
+
+  const fb = document.getElementById('quizFeedback');
+  fb.className = 'quiz-feedback show-answer-fb';
+  fb.innerHTML = `💡 Richtige Antwort: <strong>${esc(correct)}</strong>`;
+  fb.style.display = 'block';
+
+  document.getElementById('quizInput').disabled = true;
+  document.getElementById('quizInput').className = 'quiz-input wrong';
+  document.getElementById('quizSubmitBtn').style.display = 'none';
+  document.getElementById('quizNextBtn').style.display = 'inline-flex';
+}
+
+function nextQuizQuestion() {
+  const q = state.quiz;
+  q._forceRetype = null;
+  q.current++;
+  if (q.current >= q.items.length) {
+    finishQuiz();
+  } else {
+    renderQuizQuestion();
+  }
+}
+
+function finishQuiz() {
+  const q = state.quiz;
+  clearInterval(q.stopwatchInterval);
+  const totalTime = Date.now() - q.startTime;
+
+  document.getElementById('quizCard').style.display = 'none';
+  document.querySelector('.quiz-input-area').style.display = 'none';
+  document.getElementById('quizActions').style.display = 'none';
+  document.getElementById('quizResults').style.display = 'block';
+
+  document.getElementById('resPoints').textContent = q.points.toFixed(1);
+  document.getElementById('resMax').textContent = q.maxPoints;
+  document.getElementById('resGesamtzeit').textContent = `Gesamtzeit: ${formatTime(totalTime)}`;
+  document.getElementById('quizProgressFill').style.width = '100%';
+
+  const tbody = document.getElementById('resultsTableBody');
+  tbody.innerHTML = q.results.map((r, i) => `
+    <tr>
+      <td>${esc(r.item.target_word)}</td>
+      <td>${esc(r.answer)}</td>
+      <td>${esc(r.correct)}</td>
+      <td class="${r.isCorrect && r.wrongCount === 0 ? 'correct-cell' : r.points === 0.5 ? 'partial-cell' : 'wrong-cell'}">
+        ${r.isCorrect && r.wrongCount === 0 ? '✅ ' : r.points === 0.5 ? '⚡ ' : '❌ '}${r.points} Pkt
+      </td>
+      <td class="time-cell">${formatTime(r.timeTaken)}</td>
+    </tr>
+  `).join('');
+}
+
+function playQuizAudio() {
+  const btn = document.getElementById('quizAudioBtn');
+  if (btn.dataset.url) playAudio(btn.dataset.url);
+}
+
+// ==================== GRAMMAR ====================
+async function loadGrammar() {
+  if (!state.currentLang) return;
+  try {
+    state.grammar = await api('GET', `/api/languages/${state.currentLang.id}/grammar`);
+    renderGrammar();
+  } catch(e) { notify('Fehler beim Laden', 'error'); }
+}
+
+function renderGrammar() {
+  const list = document.getElementById('grammarList');
+  document.getElementById('grammarEditBtns').style.display = state.editMode ? 'flex' : 'none';
+  if (!state.grammar.length) {
+    list.innerHTML = '<div class="empty-state"><div class="icon">📝</div>Noch keine Grammatik-Regeln.</div>';
+    return;
+  }
+  list.innerHTML = state.grammar.map(g => `
+    <div class="grammar-entry">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="grammar-entry-title">${esc(g.title)}</div>
+        ${g.category ? `<span style="font-size:0.72rem;background:var(--bg4);color:var(--text3);padding:2px 8px;border-radius:100px">${esc(g.category)}</span>` : ''}
+      </div>
+      <div class="grammar-entry-content">${esc(g.content || '')}</div>
+      ${state.editMode ? `
+        <div class="grammar-entry-actions">
+          <button class="btn btn-secondary btn-sm" onclick="openEditGrammar('${g.id}')">✏️ Bearbeiten</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteGrammar('${g.id}')">🗑️ Löschen</button>
+        </div>
+      ` : ''}
+    </div>
+  `).join('');
+}
+
+function openAddGrammar() {
+  state.editingGrammar = null;
+  document.getElementById('grammarModalTitle').textContent = 'Grammatik-Regel hinzufügen';
+  ['grammarTitle','grammarCategory','grammarContent'].forEach(id => document.getElementById(id).value = '');
+  openModal('grammarModal');
+}
+
+function openEditGrammar(id) {
+  const g = state.grammar.find(g => g.id === id);
+  if (!g) return;
+  state.editingGrammar = g;
+  document.getElementById('grammarModalTitle').textContent = 'Grammatik-Regel bearbeiten';
+  document.getElementById('grammarTitle').value = g.title || '';
+  document.getElementById('grammarCategory').value = g.category || '';
+  document.getElementById('grammarContent').value = g.content || '';
+  openModal('grammarModal');
+}
+
+async function saveGrammar() {
+  const title = document.getElementById('grammarTitle').value.trim();
+  if (!title) { notify('Titel erforderlich', 'error'); return; }
+  const body = {
+    title,
+    category: document.getElementById('grammarCategory').value.trim(),
+    content: document.getElementById('grammarContent').value.trim()
+  };
+  try {
+    if (state.editingGrammar) {
+      const updated = await api('PUT', `/api/grammar/${state.editingGrammar.id}`, body);
+      const idx = state.grammar.findIndex(g => g.id === updated.id);
+      if (idx !== -1) state.grammar[idx] = updated;
+    } else {
+      const entry = await api('POST', `/api/languages/${state.currentLang.id}/grammar`, body);
+      state.grammar.push(entry);
+    }
+    closeModal('grammarModal');
+    renderGrammar();
+    notify('Gespeichert ✅', 'success');
+  } catch(e) { notify(e.message, 'error'); }
+}
+
+async function deleteGrammar(id) {
+  if (!confirm('Regel löschen?')) return;
+  await api('DELETE', `/api/grammar/${id}`);
+  state.grammar = state.grammar.filter(g => g.id !== id);
+  renderGrammar();
+  notify('Gelöscht', 'info');
+}
+
+function checkGrammar() {
+  const text = document.getElementById('grammarCheckInput').value.trim();
+  if (!text) return;
+  const rules = state.grammar.map(g => `- ${g.title}: ${g.content}`).join('\n');
+  const result = document.getElementById('grammarResult');
+  result.style.display = 'block';
+  result.textContent = rules
+    ? `Grammatik-Regeln für ${state.currentLang?.name}:\n${rules}\n\n(Prüfe deinen Text anhand dieser Regeln. Für automatische Korrekturen nutze einen externen Dienst.)`
+    : 'Keine Grammatik-Regeln hinterlegt.';
+}
+
+// ==================== DECLENSIONS ====================
+async function loadDeclensions() {
+  if (!state.currentLang) return;
+  try {
+    state.declensions = await api('GET', `/api/languages/${state.currentLang.id}/declensions`);
+    renderDeclensions();
+  } catch(e) { notify('Fehler beim Laden', 'error'); }
+}
+
+function renderDeclensions() {
+  const list = document.getElementById('declensionList');
+  document.getElementById('declensionEditBtns').style.display = state.editMode ? 'flex' : 'none';
+  if (!state.declensions.length) {
+    list.innerHTML = '<div class="empty-state"><div class="icon">📋</div>Noch keine Deklinationen.</div>';
+    return;
+  }
+  list.innerHTML = state.declensions.map(d => {
+    let tableHtml = '';
+    try {
+      const tbl = typeof d.table_data === 'string' ? JSON.parse(d.table_data) : d.table_data;
+      if (tbl && typeof tbl === 'object') {
+        const rows = Object.entries(tbl);
+        const cols = rows.length > 0 ? Object.keys(rows[0][1]) : [];
+        tableHtml = `<table class="declension-table-display">
+          <tr><th>Kasus</th>${cols.map(c => `<th>${esc(c)}</th>`).join('')}</tr>
+          ${rows.map(([kasus, vals]) => `
+            <tr><td><strong>${esc(kasus)}</strong></td>${cols.map(c => `<td>${esc(vals[c] || '')}</td>`).join('')}</tr>
+          `).join('')}
+        </table>`;
+      }
+    } catch(e) { tableHtml = `<pre style="font-size:0.8rem;color:var(--text3)">${esc(JSON.stringify(d.table_data, null, 2))}</pre>`; }
+    return `
+      <div class="grammar-entry">
+        <div class="grammar-entry-title">${esc(d.word)}</div>
+        ${tableHtml}
+        ${d.notes ? `<div class="grammar-entry-content" style="margin-top:8px">${esc(d.notes)}</div>` : ''}
+        ${state.editMode ? `
+          <div class="grammar-entry-actions">
+            <button class="btn btn-secondary btn-sm" onclick="openEditDeclension('${d.id}')">✏️</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteDeclension('${d.id}')">🗑️</button>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+function openAddDeclension() {
+  state.editingDeclension = null;
+  document.getElementById('declensionModalTitle').textContent = 'Deklination hinzufügen';
+  document.getElementById('declensionWord').value = '';
+  document.getElementById('declensionTable').value = '{"Nominativ":{"Singular":"","Plural":""},"Genitiv":{"Singular":"","Plural":""},"Dativ":{"Singular":"","Plural":""},"Akkusativ":{"Singular":"","Plural":""}}';
+  document.getElementById('declensionNotes').value = '';
+  openModal('declensionModal');
+}
+
+function openEditDeclension(id) {
+  const d = state.declensions.find(d => d.id === id);
+  if (!d) return;
+  state.editingDeclension = d;
+  document.getElementById('declensionModalTitle').textContent = 'Deklination bearbeiten';
+  document.getElementById('declensionWord').value = d.word || '';
+  document.getElementById('declensionTable').value = JSON.stringify(d.table_data, null, 2);
+  document.getElementById('declensionNotes').value = d.notes || '';
+  openModal('declensionModal');
+}
+
+async function saveDeclension() {
+  const word = document.getElementById('declensionWord').value.trim();
+  if (!word) { notify('Wort erforderlich', 'error'); return; }
+  let table_data;
+  try { table_data = JSON.parse(document.getElementById('declensionTable').value); }
+  catch(e) { notify('Ungültiges JSON in Tabelle', 'error'); return; }
+  const body = { word, table_data, notes: document.getElementById('declensionNotes').value.trim() };
+  try {
+    if (state.editingDeclension) {
+      const updated = await api('PUT', `/api/declensions/${state.editingDeclension.id}`, body);
+      const idx = state.declensions.findIndex(d => d.id === updated.id);
+      if (idx !== -1) state.declensions[idx] = updated;
+    } else {
+      const entry = await api('POST', `/api/languages/${state.currentLang.id}/declensions`, body);
+      state.declensions.push(entry);
+    }
+    closeModal('declensionModal');
+    renderDeclensions();
+    notify('Gespeichert ✅', 'success');
+  } catch(e) { notify(e.message, 'error'); }
+}
+
+async function deleteDeclension(id) {
+  if (!confirm('Deklination löschen?')) return;
+  await api('DELETE', `/api/declensions/${id}`);
+  state.declensions = state.declensions.filter(d => d.id !== id);
+  renderDeclensions();
+}
+
+// ==================== PRONUNCIATION ====================
+function loadPronunciation() {
+  const lang = state.currentLang;
+  if (!lang) return;
+  document.getElementById('pronunciationEditBtns').style.display = state.editMode ? 'flex' : 'none';
+  const content = document.getElementById('pronunciationContent');
+  content.innerHTML = `
+    <div class="grammar-entry">
+      <div class="grammar-entry-title">🔊 Aussprache-Leitfaden</div>
+      <div class="grammar-entry-content">${esc(lang.pronunciation_guide || 'Noch kein Aussprache-Leitfaden eingetragen.')}</div>
+    </div>
+    <div class="grammar-entry" style="margin-top:12px">
+      <div class="grammar-entry-title">ℹ️ Über ${esc(lang.name)}</div>
+      <div class="grammar-entry-content">${esc(lang.info || 'Noch keine Sprach-Info eingetragen.')}</div>
+    </div>
+  `;
+}
+
+function openEditPronunciation() {
+  document.getElementById('pronunciationGuide').value = state.currentLang?.pronunciation_guide || '';
+  document.getElementById('langInfoText').value = state.currentLang?.info || '';
+  openModal('pronunciationModal');
+}
+
+async function savePronunciation() {
+  const pronunciation_guide = document.getElementById('pronunciationGuide').value.trim();
+  const info = document.getElementById('langInfoText').value.trim();
+  try {
+    const updated = await api('PUT', `/api/languages/${state.currentLang.id}`, {
+      ...state.currentLang, pronunciation_guide, info
+    });
+    const idx = state.languages.findIndex(l => l.id === state.currentLang.id);
+    if (idx !== -1) state.languages[idx] = updated;
+    state.currentLang = updated;
+    closeModal('pronunciationModal');
+    loadPronunciation();
+    notify('Gespeichert ✅', 'success');
+  } catch(e) { notify(e.message, 'error'); }
+}
+
+// ==================== CHARACTERS ====================
+async function loadCharacters() {
+  if (!state.currentLang) return;
+  try {
+    state.characters = await api('GET', `/api/languages/${state.currentLang.id}/characters`);
+    renderCharacters();
+  } catch(e) {}
+}
+
+function renderCharacters() {
+  const list = document.getElementById('charactersList');
+  document.getElementById('charEditBtns').style.display = state.editMode ? 'flex' : 'none';
+  if (!state.characters.length) {
+    list.innerHTML = '<div class="empty-state"><div class="icon">✍️</div>Noch keine Schriftzeichen.</div>';
+    return;
+  }
+  list.innerHTML = state.characters.map(c => `
+    <div class="grammar-entry" style="text-align:center;cursor:pointer" onclick="openCharPractice('${c.id}')">
+      <div style="font-size:3rem;margin-bottom:6px">${esc(c.character)}</div>
+      <div style="color:var(--accent);font-size:0.88rem">${esc(c.romanization || '')}</div>
+      <div style="color:var(--text2);font-size:0.8rem;margin-top:4px">${esc(c.meaning || '')}</div>
+      ${state.editMode ? `
+        <div class="grammar-entry-actions" style="justify-content:center;margin-top:8px" onclick="event.stopPropagation()">
+          <button class="btn btn-danger btn-sm" onclick="deleteCharacter('${c.id}')">🗑️</button>
+        </div>
+      ` : ''}
+    </div>
+  `).join('');
+}
+
+function openAddCharacter() {
+  ['charChar','charRoman','charMeaning'].forEach(id => document.getElementById(id).value = '');
+  openModal('charModal');
+}
+
+async function saveCharacter() {
+  const character = document.getElementById('charChar').value.trim();
+  if (!character) { notify('Zeichen erforderlich', 'error'); return; }
+  const body = {
+    character,
+    romanization: document.getElementById('charRoman').value.trim(),
+    meaning: document.getElementById('charMeaning').value.trim(),
+    order_index: state.characters.length
+  };
+  try {
+    const entry = await api('POST', `/api/languages/${state.currentLang.id}/characters`, body);
+    state.characters.push(entry);
+    closeModal('charModal');
+    renderCharacters();
+    notify('Zeichen hinzugefügt ✅', 'success');
+  } catch(e) { notify(e.message, 'error'); }
+}
+
+async function deleteCharacter(id) {
+  if (!confirm('Zeichen löschen?')) return;
+  await api('DELETE', `/api/characters/${id}`);
+  state.characters = state.characters.filter(c => c.id !== id);
+  renderCharacters();
+}
+
+function openCharPractice(id) {
+  const c = state.characters.find(c => c.id === id);
+  if (!c) return;
+  document.getElementById('charPracticeTitle').textContent = `Zeichen nachmalen: ${c.character}`;
+  document.getElementById('charPracticeChar').textContent = c.character;
+  document.getElementById('charPracticeInfo').textContent = 
+    [c.romanization, c.meaning].filter(Boolean).join(' — ');
+  clearCharCanvas();
+  openModal('charPracticeModal');
+  initCharCanvas();
+}
+
+let charCanvasCtx = null;
+let isDrawing = false;
+
+function initCharCanvas() {
+  const canvas = document.getElementById('charCanvas');
+  charCanvasCtx = canvas.getContext('2d');
+  charCanvasCtx.lineWidth = 4;
+  charCanvasCtx.lineCap = 'round';
+  charCanvasCtx.strokeStyle = '#4f8ef7';
+
+  canvas.onmousedown = (e) => { isDrawing = true; charCanvasCtx.beginPath(); charCanvasCtx.moveTo(e.offsetX, e.offsetY); };
+  canvas.onmousemove = (e) => { if (!isDrawing) return; charCanvasCtx.lineTo(e.offsetX, e.offsetY); charCanvasCtx.stroke(); };
+  canvas.onmouseup = () => { isDrawing = false; };
+  canvas.onmouseleave = () => { isDrawing = false; };
+
+  canvas.ontouchstart = (e) => {
+    e.preventDefault(); isDrawing = true;
+    const r = canvas.getBoundingClientRect();
+    charCanvasCtx.beginPath();
+    charCanvasCtx.moveTo(e.touches[0].clientX - r.left, e.touches[0].clientY - r.top);
+  };
+  canvas.ontouchmove = (e) => {
+    e.preventDefault(); if (!isDrawing) return;
+    const r = canvas.getBoundingClientRect();
+    charCanvasCtx.lineTo(e.touches[0].clientX - r.left, e.touches[0].clientY - r.top);
+    charCanvasCtx.stroke();
+  };
+  canvas.ontouchend = () => { isDrawing = false; };
+}
+
+function clearCharCanvas() {
+  const canvas = document.getElementById('charCanvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  // Grid lines for reference
+  ctx.strokeStyle = '#2e3450';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(140, 0); ctx.lineTo(140, 280);
+  ctx.moveTo(0, 140); ctx.lineTo(280, 140);
+  ctx.stroke();
+  ctx.strokeStyle = '#4f8ef7';
+  ctx.lineWidth = 4;
+}
+
+// ==================== SUBJECTS ====================
+async function loadSubjects() {
+  try {
+    state.subjects = await api('GET', '/api/subjects');
+    renderSubjectGrid();
+    renderSubjectSidebar();
+  } catch(e) {}
+}
+
+function renderSubjectGrid() {
+  const grid = document.getElementById('subjectGrid');
+  if (!state.subjects.length) {
+    grid.innerHTML = '<div class="empty-state"><div class="icon">📓</div>Noch keine Fächer.</div>';
+    return;
+  }
+  grid.innerHTML = state.subjects.map(s => `
+    <div class="subject-card" onclick="openSubject('${s.id}')">
+      <div class="subject-card-icon">${s.description || '📓'}</div>
+      <div class="subject-card-name">${esc(s.name)}</div>
+      ${state.editMode ? `
+        <button class="btn btn-danger btn-sm" style="margin-top:8px" onclick="event.stopPropagation();deleteSubject('${s.id}')">🗑️ Löschen</button>
+      ` : ''}
+    </div>
+  `).join('');
+}
+
+function renderSubjectSidebar() {
+  const list = document.getElementById('subjectsList');
+  list.innerHTML = state.subjects.map(s => `
+    <div class="sidebar-item" onclick="openSubject('${s.id}')">
+      <span class="icon">${s.description || '📓'}</span> ${esc(s.name)}
+    </div>
+  `).join('');
+}
+
+function openAddSubject() {
+  document.getElementById('subjectName').value = '';
+  document.getElementById('subjectIcon').value = '';
+  openModal('subjectModal');
+}
+
+async function saveSubject() {
+  const name = document.getElementById('subjectName').value.trim();
+  if (!name) { notify('Name erforderlich', 'error'); return; }
+  const icon = document.getElementById('subjectIcon').value.trim() || '📓';
+  try {
+    const subject = await api('POST', '/api/subjects', { name, description: icon });
+    state.subjects.push(subject);
+    closeModal('subjectModal');
+    renderSubjectGrid();
+    renderSubjectSidebar();
+    notify('Fach erstellt ✅', 'success');
+  } catch(e) { notify(e.message, 'error'); }
+}
+
+async function deleteSubject(id) {
+  if (!confirm('Fach und alle Karten löschen?')) return;
+  await api('DELETE', `/api/subjects/${id}`);
+  state.subjects = state.subjects.filter(s => s.id !== id);
+  renderSubjectGrid();
+  renderSubjectSidebar();
+}
+
+async function openSubject(id) {
+  const subject = state.subjects.find(s => s.id === id);
+  if (!subject) return;
+  state.currentSubject = subject;
+  document.getElementById('subjectScreenTitle').textContent = `${subject.description || '📓'} ${subject.name}`;
+  document.getElementById('subjectCardEditBtns').style.display = state.editMode ? 'flex' : 'none';
+  state.subjectCards = await api('GET', `/api/subjects/${id}/cards`);
+  renderSubjectCards();
+  showScreen('subject');
+}
+
+function renderSubjectCards() {
+  const list = document.getElementById('subjectCardsList');
+  if (!state.subjectCards.length) {
+    list.innerHTML = '<div class="empty-state"><div class="icon">🃏</div>Noch keine Karten. Im Bearbeitungsmodus hinzufügen.</div>';
+    return;
+  }
+  list.innerHTML = state.subjectCards.map(c => {
+    const type = c.card_type || 'text';
+    const typeLabel = type === 'multiple_choice' ? '☑️ Multiple Choice' : type === 'image_question' ? '🖼️ Bild-Frage' : '📝 Text';
+    let optionsHtml = '';
+    if (type === 'multiple_choice' && c.options) {
+      const opts = Array.isArray(c.options) ? c.options : JSON.parse(c.options || '[]');
+      optionsHtml = opts.map(o => `
+        <div class="sc-mc-option ${o.is_correct ? 'correct' : ''}">
+          ${o.is_correct ? '✅' : '○'} ${esc(o.text || '')}
+          ${o.image_url ? `<img src="${o.image_url}" style="max-height:50px;border-radius:4px;margin-left:auto">` : ''}
+        </div>`).join('');
+    }
+    return `
+      <div class="sc-card">
+        <div class="sc-card-type-badge">${typeLabel}</div>
+        ${c.question_image_url ? `<img src="${c.question_image_url}" class="sc-card-image">` : ''}
+        <div class="sc-card-question">${esc(c.question)}</div>
+        ${type !== 'multiple_choice' ? `<div class="sc-card-answer">${esc(c.answer || '')}</div>` : ''}
+        ${c.image_url ? `<img src="${c.image_url}" class="sc-card-image">` : ''}
+        ${optionsHtml}
+        ${state.editMode ? `
+          <div class="grammar-entry-actions" style="margin-top:10px">
+            <button class="btn btn-secondary btn-sm" onclick="openEditSubjectCard('${c.id}')">✏️ Bearbeiten</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteSubjectCard('${c.id}')">🗑️ Löschen</button>
+          </div>` : ''}
+      </div>`;
+  }).join('');
+}
+
+// ==================== SUBJECT CARD MODAL ====================
+let scState = { cardType: 'text', options: [], stagedQImg: null, stagedAImg: null, editingId: null };
+
+function openAddSubjectCard() {
+  scState = { cardType: 'text', options: [], stagedQImg: null, stagedAImg: null, editingId: null };
+  document.getElementById('scModalTitle').textContent = 'Lernkarte erstellen';
+  document.getElementById('scQuestion').value = '';
+  document.getElementById('scAnswer').value = '';
+  document.getElementById('scCorrect').value = '';
+  document.getElementById('scQImgPreview').style.display = 'none';
+  document.getElementById('scAImgPreview').style.display = 'none';
+  document.getElementById('scQImgLabel').textContent = '🖼️ Bild hochladen (JPG/PNG)';
+  document.getElementById('scAImgLabel').textContent = '🖼️ Bild hochladen (JPG/PNG)';
+  document.querySelectorAll('[data-ctype]').forEach(b => b.classList.remove('selected'));
+  document.querySelector('[data-ctype="text"]').classList.add('selected');
+  selectCardType(document.querySelector('[data-ctype="text"]'), 'text');
+  openModal('subjectCardModal');
+}
+
+function openEditSubjectCard(id) {
+  const c = state.subjectCards.find(c => c.id === id);
+  if (!c) return;
+  const opts = c.options ? (Array.isArray(c.options) ? c.options : JSON.parse(c.options)) : [];
+  scState = { cardType: c.card_type || 'text', options: JSON.parse(JSON.stringify(opts)), stagedQImg: null, stagedAImg: null, editingId: id };
+  document.getElementById('scModalTitle').textContent = 'Karte bearbeiten';
+  document.getElementById('scQuestion').value = c.question || '';
+  document.getElementById('scAnswer').value = c.answer || '';
+  document.getElementById('scCorrect').value = c.correct_answer || '';
+  // set type UI
+  document.querySelectorAll('[data-ctype]').forEach(b => b.classList.remove('selected'));
+  const typeBtn = document.querySelector(`[data-ctype="${scState.cardType}"]`);
+  if (typeBtn) { typeBtn.classList.add('selected'); }
+  selectCardType(typeBtn, scState.cardType);
+  // Preview images
+  if (c.question_image_url) {
+    document.getElementById('scQImgPreview').style.display = 'block';
+    document.getElementById('scQImgPreviewImg').src = c.question_image_url;
+    scState._existingQImg = c.question_image_url;
+  }
+  if (c.image_url) {
+    document.getElementById('scAImgPreview').style.display = 'block';
+    document.getElementById('scAImgPreviewImg').src = c.image_url;
+    scState._existingAImg = c.image_url;
+  }
+  renderScOptions();
+  openModal('subjectCardModal');
+}
+
+function selectCardType(el, type) {
+  document.querySelectorAll('[data-ctype]').forEach(b => b.classList.remove('selected'));
+  if (el) el.classList.add('selected');
+  scState.cardType = type;
+  document.getElementById('scTextSection').style.display = (type === 'text' || type === 'image_question') ? 'block' : 'none';
+  document.getElementById('scMCSection').style.display = type === 'multiple_choice' ? 'block' : 'none';
+  document.getElementById('scQuestionImageWrap').style.display = (type === 'image_question') ? 'block' : 'none';
+  document.getElementById('scImageAnswerWrap').style.display = (type === 'image_question' || type === 'multiple_choice') ? 'block' : 'none';
+  if (type === 'multiple_choice' && scState.options.length === 0) {
+    scState.options = [{text:'',image_url:null,is_correct:true},{text:'',image_url:null,is_correct:false}];
+  }
+  renderScOptions();
+}
+
+function addScOption() {
+  scState.options.push({ text: '', image_url: null, is_correct: false });
+  renderScOptions();
+}
+
+function renderScOptions() {
+  const list = document.getElementById('scOptionsList');
+  if (!list) return;
+  list.innerHTML = scState.options.map((o, i) => `
+    <div class="sc-option-edit">
+      <input type="checkbox" ${o.is_correct ? 'checked' : ''} onchange="scState.options[${i}].is_correct=this.checked" title="Korrekte Antwort">
+      <input type="text" class="form-input" style="margin:0" value="${esc(o.text)}" placeholder="Antwort ${i+1}" oninput="scState.options[${i}].text=this.value">
+      <label class="btn-icon" title="Bild hinzufügen" style="cursor:pointer">
+        🖼️<input type="file" accept=".jpg,.jpeg,.png" style="display:none" onchange="stageScOptionImage(${i},this)">
+      </label>
+      ${o.image_url ? `<img src="${o.image_url}" style="max-height:36px;border-radius:4px">` : ''}
+      <button class="btn-icon danger" onclick="scState.options.splice(${i},1);renderScOptions()" title="Entfernen">✕</button>
+    </div>`).join('');
+}
+
+function stageScOptionImage(idx, input) {
+  if (!input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = (e) => { scState.options[idx].image_url = e.target.result; renderScOptions(); };
+  reader.readAsDataURL(input.files[0]);
+  scState.options[idx]._file = input.files[0];
+}
+
+function stageScImage(input, which) {
+  if (!input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    if (which === 'question') {
+      scState.stagedQImg = input.files[0];
+      document.getElementById('scQImgPreviewImg').src = e.target.result;
+      document.getElementById('scQImgPreview').style.display = 'block';
+    } else {
+      scState.stagedAImg = input.files[0];
+      document.getElementById('scAImgPreviewImg').src = e.target.result;
+      document.getElementById('scAImgPreview').style.display = 'block';
+    }
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+function removeScImage(which) {
+  if (which === 'question') {
+    scState.stagedQImg = null; scState._existingQImg = null;
+    document.getElementById('scQImgPreview').style.display = 'none';
+  } else {
+    scState.stagedAImg = null; scState._existingAImg = null;
+    document.getElementById('scAImgPreview').style.display = 'none';
+  }
+}
+
+async function uploadFileToServer(file) {
+  const fd = new FormData();
+  fd.append('image', file);
+  const data = await api('POST', '/api/upload/image', fd, true);
+  return data.url;
+}
+
+async function saveSubjectCard() {
+  const question = document.getElementById('scQuestion').value.trim();
+  if (!question) { notify('Frage erforderlich', 'error'); return; }
+
+  let question_image_url = scState._existingQImg || null;
+  let image_url = scState._existingAImg || null;
+
+  // Upload staged images
+  if (scState.stagedQImg) question_image_url = await uploadFileToServer(scState.stagedQImg);
+  if (scState.stagedAImg) image_url = await uploadFileToServer(scState.stagedAImg);
+
+  // Upload option images
+  const opts = await Promise.all(scState.options.map(async (o) => {
+    let imgUrl = o.image_url;
+    if (o._file) imgUrl = await uploadFileToServer(o._file);
+    return { text: o.text, image_url: (imgUrl && !imgUrl.startsWith('data:')) ? imgUrl : null, is_correct: o.is_correct };
+  }));
+
+  const body = {
+    question,
+    answer: document.getElementById('scAnswer').value.trim(),
+    correct_answer: document.getElementById('scCorrect').value.trim(),
+    card_type: scState.cardType,
+    options: scState.cardType === 'multiple_choice' ? opts : null,
+    image_url,
+    question_image_url,
+    order_index: scState.editingId ? undefined : state.subjectCards.length
+  };
+
+  try {
+    if (scState.editingId) {
+      const updated = await api('PUT', `/api/subject-cards/${scState.editingId}`, body);
+      const idx = state.subjectCards.findIndex(c => c.id === scState.editingId);
+      if (idx !== -1) state.subjectCards[idx] = updated;
+    } else {
+      const card = await api('POST', `/api/subjects/${state.currentSubject.id}/cards`, body);
+      state.subjectCards.push(card);
+    }
+    closeModal('subjectCardModal');
+    renderSubjectCards();
+    notify('Karte gespeichert ✅', 'success');
+  } catch(e) { notify(e.message, 'error'); }
+}
+
+async function deleteSubjectCard(id) {
+  const c = state.subjectCards.find(c => c.id === id);
+  if (!confirm(`🗑️ Karte löschen?
+
+"${c?.question || 'Diese Karte'}"
+
+Nicht rückgängig machbar!`)) return;
+  await api('DELETE', `/api/subject-cards/${id}`);
+  state.subjectCards = state.subjectCards.filter(c => c.id !== id);
+  renderSubjectCards();
+  notify('Karte gelöscht', 'info');
+}
+
+function startSubjectQuiz() {
+  if (!state.subjectCards.length) { notify('Keine Karten vorhanden', 'error'); return; }
+  const count = parseInt(prompt('Wie viele Karten abfragen?', String(state.subjectCards.length))) || state.subjectCards.length;
+  const items = shuffle([...state.subjectCards]).slice(0, count);
+  state.quiz = {
+    items: items.map(c => ({
+      id: c.id,
+      target_word: c.question,
+      translation_de: c.correct_answer || c.answer,
+      translation_en: c.correct_answer || c.answer,
+      description: c.answer,
+      audio_url: null,
+      question_image_url: c.question_image_url,
+      image_url: c.image_url,
+      card_type: c.card_type || 'text',
+      options: c.options
+    })),
+    current: 0, points: 0, maxPoints: items.length,
+    direction: 'lang_to_de', wrongCount: 0, results: [],
+    startTime: Date.now(), questionStartTime: Date.now(),
+    stopwatchInterval: null, elapsedMs: 0,
+    _currentDir: 'lang_to_de', isSubjectQuiz: true
+  };
+  showScreen('quiz');
+  document.getElementById('quizResults').style.display = 'none';
+  document.getElementById('quizCard').style.display = 'block';
+  document.querySelector('.quiz-input-area').style.display = 'block';
+  document.getElementById('quizActions').style.display = 'flex';
+  document.getElementById('quizDirectionLabel').textContent = 'Frage';
+  startStopwatch();
+  renderQuizQuestion();
+}
+
+// ==================== GEO DRAWING ====================
+const geo = {
+  canvas: null, ctx: null,
+  tool: 'line', // 'line' | 'pen' | 'point'
+  snapToGrid: true,
+  gridSize: 40,
+  color: '#4f8ef7',
+  points: [],    // {x, y, gridX, gridY}
+  lines: [],     // {x1,y1,x2,y2,color}
+  freehand: [],  // [[{x,y},...],...]
+  currentPath: null,
+  lineStart: null,  // first click of a line
+  mousePos: { x: 0, y: 0 },
+  originX: 0, originY: 0,
+  W: 800, H: 600,
+  COLS: 20, ROWS: 15
+};
+
+function openGeoDrawing() {
+  showScreen('geo');
+  setTimeout(initGeoCanvas, 50);
+}
+
+function initGeoCanvas() {
+  const canvas = document.getElementById('geoCanvas');
+  geo.canvas = canvas;
+  geo.ctx = canvas.getContext('2d');
+  const wrap = canvas.parentElement;
+  geo.W = Math.max(800, wrap.clientWidth - 2);
+  geo.H = 600;
+  canvas.width = geo.W;
+  canvas.height = geo.H;
+  geo.gridSize = Math.floor(geo.W / geo.COLS);
+  geo.originX = geo.gridSize * 2;
+  geo.originY = geo.H - geo.gridSize * 2;
+
+  canvas.onmousemove = geoMouseMove;
+  canvas.onmousedown = geoMouseDown;
+  canvas.onmouseup = geoMouseUp;
+  canvas.onmouseleave = () => { if (geo.tool === 'pen' && geo.currentPath) { geo.freehand.push(geo.currentPath); geo.currentPath = null; } };
+  geoRender();
+}
+
+function geoSetTool(tool) {
+  geo.tool = tool;
+  geo.lineStart = null;
+  geo.currentPath = null;
+  document.getElementById('geoPenBtn').classList.toggle('active', tool === 'pen');
+  document.getElementById('geoLineBtn').classList.toggle('active', tool === 'line');
+  document.getElementById('geoPointBtn').classList.toggle('active', tool === 'point');
+  geoRender();
+}
+
+function geoToggleSnap(val) { geo.snapToGrid = val; }
+
+function geoSnapPoint(px, py) {
+  if (!geo.snapToGrid) return { x: px, y: py };
+  // Find nearest grid intersection
+  const gx = Math.round((px - geo.originX) / geo.gridSize);
+  const gy = -Math.round((py - geo.originY) / geo.gridSize);
+  return { x: geo.originX + gx * geo.gridSize, y: geo.originY - gy * geo.gridSize, gx, gy };
+}
+
+function geoMouseMove(e) {
+  const rect = geo.canvas.getBoundingClientRect();
+  const px = e.clientX - rect.left;
+  const py = e.clientY - rect.top;
+  const snapped = geoSnapPoint(px, py);
+  geo.mousePos = snapped;
+
+  // Update cursor display
+  const gx = Math.round((snapped.x - geo.originX) / geo.gridSize);
+  const gy = -Math.round((snapped.y - geo.originY) / geo.gridSize);
+  document.getElementById('geoCursorPos').textContent = `(${gx}, ${gy})`;
+
+  // Update angle display
+  if (geo.tool === 'line' && geo.lineStart) {
+    const dx = snapped.x - geo.lineStart.x;
+    const dy = -(snapped.y - geo.lineStart.y); // flip y
+    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+    document.getElementById('geoAngleDisplay').textContent = angle.toFixed(1) + '°';
+  }
+
+  if (geo.tool === 'pen' && geo.currentPath) {
+    geo.currentPath.push({ x: px, y: py });
+  }
+
+  geoRender();
+}
+
+function geoMouseDown(e) {
+  const rect = geo.canvas.getBoundingClientRect();
+  const px = e.clientX - rect.left;
+  const py = e.clientY - rect.top;
+  const snapped = geoSnapPoint(px, py);
+  geo.color = document.getElementById('geoColor').value;
+
+  if (geo.tool === 'point') {
+    geo.points.push({ x: snapped.x, y: snapped.y });
+    geoRender();
+  } else if (geo.tool === 'line') {
+    if (!geo.lineStart) {
+      geo.lineStart = snapped;
+      document.getElementById('geoAngleDisplay').textContent = '0.0°';
+    } else {
+      geo.lines.push({ x1: geo.lineStart.x, y1: geo.lineStart.y, x2: snapped.x, y2: snapped.y, color: geo.color });
+      // Compute & show final angle
+      const dx = snapped.x - geo.lineStart.x;
+      const dy = -(snapped.y - geo.lineStart.y);
+      const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+      document.getElementById('geoAngleDisplay').textContent = angle.toFixed(1) + '°';
+      geo.lineStart = null;
+      geoRender();
+    }
+  } else if (geo.tool === 'pen') {
+    geo.currentPath = [{ x: px, y: py }];
+  }
+}
+
+function geoMouseUp(e) {
+  if (geo.tool === 'pen' && geo.currentPath && geo.currentPath.length > 1) {
+    geo.freehand.push({ path: geo.currentPath, color: geo.color });
+    geo.currentPath = null;
+    geoRender();
+  }
+}
+
+function geoRender() {
+  const { ctx, W, H, gridSize, originX, originY } = geo;
+  ctx.clearRect(0, 0, W, H);
+
+  // Background
+  ctx.fillStyle = '#1a1e2a';
+  ctx.fillRect(0, 0, W, H);
+
+  // Grid
+  ctx.strokeStyle = '#2e3450';
+  ctx.lineWidth = 1;
+  for (let x = originX % gridSize; x < W; x += gridSize) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+  }
+  for (let y = originY % gridSize; y < H; y += gridSize) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+
+  // Axes
+  ctx.strokeStyle = '#5060a0';
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(0, originY); ctx.lineTo(W, originY); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(originX, 0); ctx.lineTo(originX, H); ctx.stroke();
+
+  // Axis labels
+  ctx.fillStyle = '#6878a0';
+  ctx.font = '11px monospace';
+  ctx.textAlign = 'center';
+  for (let gx = -10; gx <= 20; gx++) {
+    const px = originX + gx * gridSize;
+    if (px < 0 || px > W) continue;
+    if (gx !== 0) {
+      ctx.fillText(String(gx), px, originY + 14);
+      ctx.beginPath(); ctx.moveTo(px, originY - 3); ctx.lineTo(px, originY + 3); ctx.stroke();
+    }
+  }
+  ctx.textAlign = 'right';
+  for (let gy = -10; gy <= 15; gy++) {
+    const py = originY - gy * gridSize;
+    if (py < 0 || py > H) continue;
+    if (gy !== 0) {
+      ctx.fillText(String(gy), originX - 6, py + 4);
+    }
+  }
+  ctx.fillText('0', originX - 6, originY + 14);
+  ctx.fillStyle = '#a0a8c0';
+  ctx.font = '13px monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText('x', W - 16, originY - 6);
+  ctx.textAlign = 'center';
+  ctx.fillText('y', originX + 12, 12);
+
+  // Freehand
+  geo.freehand.forEach(fp => {
+    if (!fp.path || fp.path.length < 2) return;
+    ctx.strokeStyle = fp.color || '#4f8ef7';
+    ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.beginPath(); ctx.moveTo(fp.path[0].x, fp.path[0].y);
+    fp.path.forEach(p => ctx.lineTo(p.x, p.y));
+    ctx.stroke();
+  });
+  // Current freehand
+  if (geo.currentPath && geo.currentPath.length > 1) {
+    ctx.strokeStyle = geo.color;
+    ctx.lineWidth = 2.5; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(geo.currentPath[0].x, geo.currentPath[0].y);
+    geo.currentPath.forEach(p => ctx.lineTo(p.x, p.y));
+    ctx.stroke();
+  }
+
+  // Lines
+  geo.lines.forEach(l => {
+    ctx.strokeStyle = l.color || '#4f8ef7';
+    ctx.lineWidth = 2.5; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(l.x1, l.y1); ctx.lineTo(l.x2, l.y2); ctx.stroke();
+    // Arrow at end
+    const angle = Math.atan2(l.y2 - l.y1, l.x2 - l.x1);
+    ctx.beginPath();
+    ctx.moveTo(l.x2, l.y2);
+    ctx.lineTo(l.x2 - 10*Math.cos(angle-0.35), l.y2 - 10*Math.sin(angle-0.35));
+    ctx.moveTo(l.x2, l.y2);
+    ctx.lineTo(l.x2 - 10*Math.cos(angle+0.35), l.y2 - 10*Math.sin(angle+0.35));
+    ctx.stroke();
+  });
+
+  // Preview line from lineStart to mouse
+  if (geo.lineStart && geo.tool === 'line') {
+    ctx.strokeStyle = geo.color + '88';
+    ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
+    ctx.beginPath(); ctx.moveTo(geo.lineStart.x, geo.lineStart.y); ctx.lineTo(geo.mousePos.x, geo.mousePos.y); ctx.stroke();
+    ctx.setLineDash([]);
+    // Angle arc
+    const dx = geo.mousePos.x - geo.lineStart.x;
+    const dy = -(geo.mousePos.y - geo.lineStart.y);
+    const angle = Math.atan2(dy, dx);
+    ctx.strokeStyle = '#f0b44f88'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(geo.lineStart.x, geo.lineStart.y, 24, -angle, 0, angle < 0);
+    ctx.stroke();
+    ctx.fillStyle = '#f0b44f'; ctx.font = '11px monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText((angle*180/Math.PI).toFixed(1)+'°', geo.lineStart.x + 28, geo.lineStart.y - 4);
+    // Dot at start
+    ctx.fillStyle = '#4fd4b0';
+    ctx.beginPath(); ctx.arc(geo.lineStart.x, geo.lineStart.y, 5, 0, Math.PI*2); ctx.fill();
+  }
+
+  // Points
+  geo.points.forEach(p => {
+    ctx.fillStyle = '#f06a6a';
+    ctx.beginPath(); ctx.arc(p.x, p.y, 5, 0, Math.PI*2); ctx.fill();
+    // Coordinate label
+    const gx = Math.round((p.x - originX) / gridSize);
+    const gy = -Math.round((p.y - originY) / gridSize);
+    ctx.fillStyle = '#e8eaf0'; ctx.font = '11px monospace'; ctx.textAlign = 'center';
+    ctx.fillText(`(${gx},${gy})`, p.x, p.y - 10);
+  });
+
+  // Snap hover highlight
+  if (geo.snapToGrid && geo.mousePos) {
+    const { x, y } = geo.mousePos;
+    const nearPoint = geo.points.find(p => Math.abs(p.x-x)<8 && Math.abs(p.y-y)<8);
+    ctx.strokeStyle = nearPoint ? '#4fd4b0' : '#4f8ef7';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(x, y, nearPoint ? 8 : 4, 0, Math.PI*2); ctx.stroke();
+    if (nearPoint) {
+      ctx.strokeStyle = '#4fd4b044'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(x, y, 14, 0, Math.PI*2); ctx.stroke();
+    }
+  }
+}
+
+function geoClear() {
+  if (!confirm('Alles löschen?')) return;
+  geo.points = []; geo.lines = []; geo.freehand = []; geo.lineStart = null; geo.currentPath = null;
+  document.getElementById('geoAngleDisplay').textContent = '—';
+  geoRender();
+}
+
+function geoSaveImage(type='png') {
+  const canvas = geo.canvas;
+  const link = document.createElement('a');
+  link.download = `koordinatensystem.${type}`;
+  link.href = canvas.toDataURL(type === 'jpg' ? 'image/jpeg' : 'image/png', 0.95);
+  link.click();
+  notify(`Als ${type.toUpperCase()} gespeichert ✅`, 'success');
+}
+function geoSaveImageJPG() { geoSaveImage('jpg'); }
+
+// ==================== CATALOG ENTRY (from sidebar) ====================
+// When user clicks catalog in sidebar, open catalog for current lang
+document.getElementById('sideCatalog').addEventListener('click', () => {
+  if (!state.currentLang) {
+    if (state.languages.length) openLanguage(state.languages[0].id);
+    else { notify('Bitte zuerst eine Sprache auswählen', 'info'); return; }
+  }
+  loadPages(state.currentLang.id);
+  showScreen('catalog');
+});
+
+// When opening catalog from feature card
+window.setVocabModeAndShow = async function(mode) {
+  state.vocabMode = mode;
+  if (state.currentLang) {
+    await loadPages(state.currentLang.id);
+    showScreen('catalog');
+  }
+};
+
+// Redirect to catalog from feature card
+const origOpenFeature = window.openFeature;
+window.openFeature = function(feature) {
+  if (feature === 'catalog') {
+    setVocabModeAndShow('word');
+  } else if (feature === 'sentences') {
+    setVocabModeAndShow('sentence');
+  } else if (feature === 'grammar') {
+    loadGrammar(); showScreen('grammar');
+  } else if (feature === 'declension') {
+    loadDeclensions(); showScreen('declension');
+  } else if (feature === 'pronunciation') {
+    loadPronunciation(); showScreen('pronunciation');
+  }
+};
+
+// ==================== MODAL HELPERS ====================
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// Close modal on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) overlay.classList.remove('open');
+  });
+});
+
+// ==================== NOTIFICATIONS ====================
+function notify(msg, type = 'info') {
+  const container = document.getElementById('notifications');
+  const el = document.createElement('div');
+  el.className = `notif ${type}`;
+  el.textContent = msg;
+  container.appendChild(el);
+  setTimeout(() => { el.style.animation = 'fadeOut 0.3s ease forwards'; setTimeout(() => el.remove(), 300); }, 3000);
+}
+
+// ==================== EXPORT / IMPORT ====================
+async function exportVocabs() {
+  if (!state.currentLang) { notify('Bitte zuerst eine Sprache auswählen', 'error'); return; }
+  try {
+    notify('Exportiere Daten...', 'info');
+    // Load all pages and vocabs for current language
+    const pages = await api('GET', `/api/languages/${state.currentLang.id}/pages`);
+    const sentencePages = await api('GET', `/api/languages/${state.currentLang.id}/pages?type=sentence`);
+    const allPages = [...pages, ...sentencePages];
+    const exportData = {
+      version: 1,
+      exportDate: new Date().toISOString(),
+      language: state.currentLang,
+      pages: []
+    };
+    for (const page of allPages) {
+      const vocabs = await api('GET', `/api/pages/${page.id}/vocabs`);
+      exportData.pages.push({ ...page, vocabs });
+    }
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ovok-${state.currentLang.code}-${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    notify('Export erfolgreich ✅', 'success');
+  } catch(e) { notify('Export fehlgeschlagen: ' + e.message, 'error'); }
+}
+
+async function importVocabs(input) {
+  if (!input.files[0]) return;
+  if (!state.currentLang) { notify('Bitte zuerst eine Sprache auswählen', 'error'); return; }
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.pages || !Array.isArray(data.pages)) { notify('Ungültige Datei', 'error'); return; }
+      let imported = 0;
+      for (const pageData of data.pages) {
+        // Create page
+        const page = await api('POST', `/api/languages/${state.currentLang.id}/pages`, {
+          name: pageData.name + ' (Import)',
+          type: pageData.type || 'word',
+          order_index: 999
+        });
+        // Create vocabs
+        for (const v of (pageData.vocabs || [])) {
+          await api('POST', `/api/pages/${page.id}/vocabs`, {
+            target_word: v.target_word,
+            translation_de: v.translation_de,
+            translation_en: v.translation_en,
+            description: v.description,
+            correct_answer_de: v.correct_answer_de,
+            correct_answer_en: v.correct_answer_en,
+            order_index: v.order_index || 0
+          });
+          imported++;
+        }
+      }
+      notify(`${imported} Vokabeln importiert ✅`, 'success');
+      closeModal('exportModal');
+      if (state.currentPage) await loadVocabs(state.currentPage.id);
+    } catch(e) { notify('Import fehlgeschlagen: ' + e.message, 'error'); }
+  };
+  reader.readAsText(input.files[0]);
+}
+
+// ==================== UTILS ====================
+function esc(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ==================== START ====================
+loadSavedTheme();
+init();
+</script>
+</body>
+</html>
